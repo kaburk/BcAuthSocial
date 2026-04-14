@@ -76,50 +76,66 @@ ProviderAdapterRegistry::getInstance()->register(new LineProviderAdapter());
 
 ## 実装ステータス
 
-フェーズ 1 実装済み（Admin prefix 対応）。Front prefix は未対応。
+フェーズ 1 実装済み（Admin / Front 両対応）。
 
 ### 作成済みファイル
 
 | ファイル | 概要 |
 |---|---|
 | `config.php` | adminLink / installMessage 設定 |
-| `config/routes.php` | Admin ルート定義 |
+| `config/routes.php` | Admin / Front ルート定義 |
 | `config/setting.php` | env ベースの provider 設定（providerLabels / envKeys / callbackUrls） |
-| `config/Migrations/20260409000001_CreateAuthProviderLinks.php` | マイグレーション |
-| `src/BcAuthSocialPlugin.php` | プラグインクラス |
+| `config/Migrations/20260409000001_CreateBcAuthProviderLinks.php` | マイグレーション（テーブル名: `bc_auth_provider_links`） |
+| `src/BcAuthSocialPlugin.php` | プラグインクラス（Google / X を ProviderAdapterRegistry に登録、AuthEntryService にエントリ登録） |
 | `src/Adapter/ProviderAdapterInterface.php` | アダプタインターフェース（外部アドオン向け公開 API） |
 | `src/Adapter/ProviderAdapterRegistry.php` | シングルトン registry |
 | `src/Adapter/ProviderUserProfile.php` | プロフィール DTO |
 | `src/Adapter/GoogleProviderAdapter.php` | Google OIDC アダプタ |
 | `src/Adapter/XProviderAdapter.php` | X（OAuth 2.0 / PKCE）アダプタ |
-| `src/Model/Entity/AuthProviderLink.php` | エンティティ |
-| `src/Model/Table/AuthProviderLinksTable.php` | テーブルクラス |
-| `src/Model/Entity/SocialAuthConfig.php` | バーチャルエンティティ（env 読み書き） |
-| `src/Model/Table/SocialAuthConfigsTable.php` | バーチャルテーブル |
-| `src/Service/SocialAuthService.php` | 認可 URL 生成・callback 処理・ユーザーひも付け・連携候補フロー |
-| `src/Service/SocialAuthConfigsService.php` | provider 設定の読み書き（.env / 画面表示） |
-| `src/Service/SocialAuthConfigsServiceInterface.php` | インターフェース |
+| `src/Model/Entity/BcAuthProviderLink.php` | エンティティ |
+| `src/Model/Table/BcAuthProviderLinksTable.php` | テーブルクラス |
+| `src/Model/Entity/BcAuthSocialConfig.php` | バーチャルエンティティ（env 読み書き） |
+| `src/Model/Table/BcAuthSocialConfigsTable.php` | バーチャルテーブル |
+| `src/Service/BcAuthSocialService.php` | 認可 URL 生成・callback 処理・ユーザーひも付け・連携候補フロー |
+| `src/Service/BcAuthSocialConfigsService.php` | provider 設定の読み書き（.env / 画面表示） |
+| `src/Service/BcAuthSocialConfigsServiceInterface.php` | インターフェース |
 | `src/ServiceProvider/BcAuthSocialServiceProvider.php` | DI 登録 |
-| `src/Controller/Admin/AuthController.php` | login / callback / link_candidate / confirm_link / cancel_link |
-| `src/Controller/Admin/SocialAuthAccountsController.php` | 連携済みアカウント管理（一覧・解除・追加連携導線） |
-| `src/Controller/Admin/SocialAuthConfigsController.php` | provider 設定画面 |
-| `templates/Admin/Auth/link_candidate.php` | 連携候補確認画面 |
-| `templates/Admin/SocialAuthAccounts/index.php` | 連携済みアカウント一覧 |
-| `templates/Admin/SocialAuthConfigs/index.php` | provider 設定画面 |
+| `src/Event/BcAuthSocialViewEventListener.php` | View イベントリスナー |
+| `src/Controller/Admin/BcAuthController.php` | Admin: login / callback / linkCandidate / confirmLink / cancelLink |
+| `src/Controller/Admin/BcAuthSocialAccountsController.php` | 連携済みアカウント管理（一覧・解除・追加連携導線） |
+| `src/Controller/Admin/BcAuthSocialConfigsController.php` | provider 設定画面 |
+| `src/Controller/BcAuthController.php` | Front: login / callback / linkCandidate / confirmLink / cancelLink |
+| `templates/Admin/BcAuth/link_candidate.php` | Admin 連携候補確認画面 |
+| `templates/Admin/BcAuthSocialAccounts/index.php` | 連携済みアカウント一覧 |
+| `templates/Admin/BcAuthSocialConfigs/index.php` | provider 設定画面 |
+| `templates/BcAuth/link_candidate.php` | Front 連携候補確認画面 |
 | `templates/element/social_login_buttons.php` | ログイン画面埋め込み用ソーシャルボタン element |
+| `templates/plugin/BcAdminThird/Admin/Users/login.php` | Admin ログイン画面 override（BcAuthPasskey 単独でも動作、AuthEntryService でボタン群を描画） |
+| `templates/plugin/BcFront/Users/login.php` | Front ログイン画面 override（AuthEntryService でボタン群を描画） |
 
-### ログイン画面への統合状況
+## DB テーブル
 
-Admin ログイン画面へのソーシャルログインボタン表示は、**BcAuthPasskey の template override 経由**で実現しています。
+| テーブル | 用途 |
+|---|---|
+| `bc_auth_provider_links` | baserCMS ユーザーと外部プロバイダアカウントのひも付け |
 
-- BcAuthPasskey が有効な場合：BcAuthPasskey の login.php override が `BcAuthSocial.social_login_buttons` element を条件付きでインクルードする
-- **BcAuthPasskey なしで BcAuthSocial のみインストールした場合：ログイン画面にソーシャルボタンが表示されない**（残タスク #1 参照）
+## ルーティング
 
-### 残タスク
+| URL | 用途 |
+|---|---|
+| `GET /baser/admin/bc-auth-social/social_auth_configs` | provider 設定画面 |
+| `GET /baser/admin/bc-auth-social/social_auth_accounts` | 連携済みアカウント管理画面 |
+| `GET /baser/admin/bc-auth-social/bc_auth/login/:provider` | Admin ソーシャルログイン開始 |
+| `GET /baser/admin/bc-auth-social/bc_auth/callback/:provider` | Admin OAuth コールバック |
+| `GET /baser/admin/bc-auth-social/bc_auth/link-candidate/:provider` | Admin 連携候補確認 |
+| `POST /baser/admin/bc-auth-social/bc_auth/confirm-link/:provider` | Admin 連携確定 |
+| `POST /baser/admin/bc-auth-social/bc_auth/cancel-link/:provider` | Admin 連携キャンセル |
+| `GET /bc-auth-social/bc_auth/login/:provider` | Front ソーシャルログイン開始 |
+| `GET /bc-auth-social/bc_auth/callback/:provider` | Front OAuth コールバック |
+| `GET /bc-auth-social/bc_auth/link-candidate/:provider` | Front 連携候補確認 |
+| `POST /bc-auth-social/bc_auth/confirm-link/:provider` | Front 連携確定 |
+| `POST /bc-auth-social/bc_auth/cancel-link/:provider` | Front 連携キャンセル |
 
-1. **単体動作対応**（優先度: 高）: BcAuthPasskey がなくても Admin ログイン画面にソーシャルボタンが表示されるよう、BcAuthSocial 独自の `templates/plugin/BcAdminThird/Admin/Users/login.php` override を追加する
-2. **Front prefix 対応**（優先度: 高）: Front 向けの `AuthController`（login / callback）と routes を追加する
-3. **Front ログイン画面統合**（優先度: 高・2の後）: Front ログイン画面へのソーシャルボタン差し込みを実装する
-4. **X provider 実運用検証**（優先度: 中）: X PKCE フローの end-to-end 確認
-5. **Docker e2e 動作確認**（優先度: 高）: 管理画面からインストール → Google/X 認証フローの一気通貫確認
-- X の実運用検証
+## 残タスク
+
+- **Front 側デザイン調整**: 実運用テーマ確定後に `templates/plugin/BcFront/Users/login.php` の見た目を調整する（機能自体は実装済み）
