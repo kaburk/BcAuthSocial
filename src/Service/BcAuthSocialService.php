@@ -388,7 +388,7 @@ class BcAuthSocialService
         return Router::url([
             'plugin' => 'BcAuthSocial',
             'prefix' => $prefix === 'Front' ? false : $prefix,
-            'controller' => 'Auth',
+            'controller' => 'BcAuth',
             'action' => 'callback',
             $provider,
         ], true);

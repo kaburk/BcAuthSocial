@@ -170,7 +170,7 @@ class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
         return Router::url([
             'prefix' => 'Admin',
             'plugin' => 'BcAuthSocial',
-            'controller' => 'Auth',
+            'controller' => 'BcAuth',
             'action' => 'callback',
             $provider,
         ], true);

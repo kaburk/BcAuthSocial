@@ -37,7 +37,7 @@ $isAdmin = ($prefix ?? 'Admin') === 'Admin';
     $loginUrl = $this->Url->build(array_filter([
         'plugin' => 'BcAuthSocial',
         'prefix' => $isAdmin ? 'Admin' : false,
-        'controller' => 'Auth',
+        'controller' => 'BcAuth',
         'action' => 'login',
         $provider,
         '?' => array_filter(['redirect' => $redirect]),
