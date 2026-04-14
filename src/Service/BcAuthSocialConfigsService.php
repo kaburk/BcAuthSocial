@@ -14,7 +14,7 @@ class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
 {
     use BcContainerTrait;
 
-    private const PROVIDERS = ['google', 'x'];
+    private const PROVIDERS = ['google', 'x', 'github', 'line', 'microsoft'];
 
     private SiteConfigsServiceInterface $siteConfigsService;
 
@@ -105,6 +105,9 @@ class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
             'providerLabels' => [
                 'google' => 'Google',
                 'x' => 'X',
+                'github' => 'GitHub',
+                'line' => 'LINE',
+                'microsoft' => 'Microsoft',
             ],
             'envKeys' => [
                 'google' => [
@@ -119,10 +122,31 @@ class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
                     'client_secret' => 'BC_SOCIAL_AUTH_X_CLIENT_SECRET',
                     'redirect_uri' => 'BC_SOCIAL_AUTH_X_REDIRECT_URI',
                 ],
+                'github' => [
+                    'enabled' => 'BC_SOCIAL_AUTH_GITHUB_ENABLED',
+                    'client_id' => 'BC_SOCIAL_AUTH_GITHUB_CLIENT_ID',
+                    'client_secret' => 'BC_SOCIAL_AUTH_GITHUB_CLIENT_SECRET',
+                    'redirect_uri' => 'BC_SOCIAL_AUTH_GITHUB_REDIRECT_URI',
+                ],
+                'line' => [
+                    'enabled' => 'BC_SOCIAL_AUTH_LINE_ENABLED',
+                    'client_id' => 'BC_SOCIAL_AUTH_LINE_CLIENT_ID',
+                    'client_secret' => 'BC_SOCIAL_AUTH_LINE_CLIENT_SECRET',
+                    'redirect_uri' => 'BC_SOCIAL_AUTH_LINE_REDIRECT_URI',
+                ],
+                'microsoft' => [
+                    'enabled' => 'BC_SOCIAL_AUTH_MICROSOFT_ENABLED',
+                    'client_id' => 'BC_SOCIAL_AUTH_MICROSOFT_CLIENT_ID',
+                    'client_secret' => 'BC_SOCIAL_AUTH_MICROSOFT_CLIENT_SECRET',
+                    'redirect_uri' => 'BC_SOCIAL_AUTH_MICROSOFT_REDIRECT_URI',
+                ],
             ],
             'callbackUrls' => [
                 'google' => $this->buildCallbackUrl('google'),
                 'x' => $this->buildCallbackUrl('x'),
+                'github' => $this->buildCallbackUrl('github'),
+                'line' => $this->buildCallbackUrl('line'),
+                'microsoft' => $this->buildCallbackUrl('microsoft'),
             ],
         ];
     }

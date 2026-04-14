@@ -5,7 +5,10 @@ namespace BcAuthSocial;
 
 use BaserCore\BcPlugin;
 use BcAuthCommon\Service\AuthEntryService;
+use BcAuthSocial\Adapter\GitHubProviderAdapter;
 use BcAuthSocial\Adapter\GoogleProviderAdapter;
+use BcAuthSocial\Adapter\LineProviderAdapter;
+use BcAuthSocial\Adapter\MicrosoftProviderAdapter;
 use BcAuthSocial\Adapter\ProviderAdapterRegistry;
 use BcAuthSocial\Adapter\XProviderAdapter;
 use BcAuthSocial\Event\BcAuthSocialViewEventListener;
@@ -36,6 +39,9 @@ class BcAuthSocialPlugin extends BcPlugin
         $registry = ProviderAdapterRegistry::getInstance();
         $registry->register(new GoogleProviderAdapter());
         $registry->register(new XProviderAdapter());
+        $registry->register(new GitHubProviderAdapter());
+        $registry->register(new LineProviderAdapter());
+        $registry->register(new MicrosoftProviderAdapter());
 
         AuthEntryService::getInstance()->register([
             'id'       => 'social',

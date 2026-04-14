@@ -33,7 +33,7 @@ $this->BcAdmin->setTitle(__d('baser_core', 'ソーシャル認証設定'));
       <td class="col-input bca-form-table__input">
         <?php echo $hasAnyAvailableProvider ? __d('baser_core', '利用可能') : __d('baser_core', '未設定') ?>
         <?php if (!$hasAnyAvailableProvider): ?>
-          <div><small><?php echo __d('baser_core', 'Google または X の enabled / client ID / client secret を設定してください。') ?></small></div>
+          <div><small><?php echo __d('baser_core', '少なくとも1つのプロバイダを有効化し、client ID / client secret を設定してください。') ?></small></div>
         <?php endif ?>
       </td>
     </tr>
@@ -43,7 +43,7 @@ $this->BcAdmin->setTitle(__d('baser_core', 'ソーシャル認証設定'));
 <section class="bca-section" data-bca-section-type="form-group">
   <h2 class="bca-main__heading" data-bca-heading-size="lg"><?php echo __d('baser_core', '設定方針') ?></h2>
   <div class="bca-section__content">
-    <p><?php echo __d('baser_core', 'Google / X の provider 設定を管理します。redirect URI を空欄にした場合は、下記の自動生成 callback URL を利用します。') ?></p>
+    <p><?php echo __d('baser_core', '各プロバイダの設定を管理します。redirect URI を空欄にした場合は、下記の自動生成 callback URL を利用します。') ?></p>
     <p><?php echo __d('baser_core', 'install 直後は、この画面で provider 設定を保存してから管理画面ログインで導線を確認します。') ?></p>
     <?php if (!$isWritableEnv): ?>
       <p><?php echo '⚠ ' . __d('baser_core', '.env に書き込みできないため、この画面では保存できません。必要なキーを手作業で設定してください。') ?></p>
@@ -75,6 +75,39 @@ $providerGuides = [
             __d('baser_core', '「OAuth 2.0」を On にし、Type of App で「Web App, Automated App or Bot」を選択します。'),
             __d('baser_core', '「Callback URI / Redirect URL」に下記の Callback URL を追加し、保存します。'),
             __d('baser_core', '「Keys and tokens」タブ →「OAuth 2.0 Client ID and Client Secret」の「Generate」または「Regenerate」でキーを取得し、入力します。'),
+        ],
+    ],
+    'github' => [
+        'console_url' => 'https://github.com/settings/developers',
+        'console_label' => 'GitHub Developer Settings',
+        'steps' => [
+            __d('baser_core', '<a href="https://github.com/settings/developers" target="_blank" rel="noopener noreferrer">GitHub Developer Settings</a> にアクセスし、「OAuth Apps」→「New OAuth App」を選択します。'),
+            __d('baser_core', '「Homepage URL」にサイトの URL を入力します。'),
+            __d('baser_core', '「Authorization callback URL」に下記の Callback URL を入力し、「Register application」をクリックします。'),
+            __d('baser_core', 'アプリ詳細画面で「Client ID」をコピーし、「Generate a new client secret」でシークレットを生成してコピーします。'),
+            __d('baser_core', 'コピーした「Client ID」と「Client Secret」をここに入力します。'),
+        ],
+    ],
+    'line' => [
+        'console_url' => 'https://developers.line.biz/',
+        'console_label' => 'LINE Developers Console',
+        'steps' => [
+            __d('baser_core', '<a href="https://developers.line.biz/" target="_blank" rel="noopener noreferrer">LINE Developers Console</a> にアクセスし、プロバイダーを選択（または作成）します。'),
+            __d('baser_core', '「チャンネル作成」→「LINE ログイン」を選択し、チャンネル情報を入力して作成します。'),
+            __d('baser_core', '「LINE ログイン設定」タブ →「コールバック URL」欄に下記の Callback URL を入力して保存します。'),
+            __d('baser_core', '「チャンネル基本設定」タブの「チャンネル ID」（Client ID）と「チャンネルシークレット」（Client Secret）をコピーして入力します。'),
+            __d('baser_core', '※ メールアドレスの取得には LINE 側の審査が必要です。審査前はメール連携なしでログインのみ可能です。'),
+        ],
+    ],
+    'microsoft' => [
+        'console_url' => 'https://entra.microsoft.com/',
+        'console_label' => 'Microsoft Entra 管理センター',
+        'steps' => [
+            __d('baser_core', '<a href="https://entra.microsoft.com/" target="_blank" rel="noopener noreferrer">Microsoft Entra 管理センター</a>（または <a href="https://portal.azure.com/" target="_blank" rel="noopener noreferrer">Azure Portal</a>）にアクセスします。'),
+            __d('baser_core', '「アプリの登録」→「新規登録」を選択し、アプリ名を入力します。サポートされているアカウントの種類は「任意の組織ディレクトリ内のアカウントと個人の Microsoft アカウント」を選択します。'),
+            __d('baser_core', '「リダイレクト URI」のプラットフォームに「Web」を選択し、下記の Callback URL を入力して「登録」をクリックします。'),
+            __d('baser_core', '「証明書とシークレット」→「新しいクライアントシークレット」を追加し、表示されたシークレット値をコピーします（画面遷移後は再表示されません）。'),
+            __d('baser_core', '「概要」ページの「アプリケーション（クライアント）ID」をコピーし、Client ID に入力します。'),
         ],
     ],
 ];
