@@ -132,7 +132,7 @@ class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
         $connection = TableRegistry::getTableLocator()->get('BaserCore.Plugins')->getConnection();
         $tables = $connection->getSchemaCollection()->listTables();
 
-        return in_array('auth_provider_links', $tables, true);
+        return in_array('bc_auth_provider_links', $tables, true);
     }
 
     public function hasAnyAvailableProvider(): bool
@@ -168,8 +168,8 @@ class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
     private function buildCallbackUrl(string $provider): string
     {
         return Router::url([
-            'prefix' => 'Admin',
             'plugin' => 'BcAuthSocial',
+            'prefix' => 'Admin',
             'controller' => 'BcAuth',
             'action' => 'callback',
             $provider,

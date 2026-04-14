@@ -18,15 +18,15 @@ $routes->prefix(
                 $routes->connect('/social_auth_accounts', ['controller' => 'BcAuthSocialAccounts', 'action' => 'index']);
                 $routes->post('/social_auth_accounts/unlink/:id', ['controller' => 'BcAuthSocialAccounts', 'action' => 'unlink'])
                     ->setPatterns(['id' => '[0-9]+']);
-                $routes->get('/auth/login/:provider', ['controller' => 'BcAuth', 'action' => 'login'], 'bc_auth_social_admin_login')
+                $routes->get('/bc_auth/login/:provider', ['controller' => 'BcAuth', 'action' => 'login'], 'bc_auth_social_admin_login')
                     ->setPatterns(['provider' => '[a-z0-9_-]+']);
-                $routes->get('/auth/callback/:provider', ['controller' => 'BcAuth', 'action' => 'callback'], 'bc_auth_social_admin_callback')
+                $routes->get('/bc_auth/callback/:provider', ['controller' => 'BcAuth', 'action' => 'callback'], 'bc_auth_social_admin_callback')
                     ->setPatterns(['provider' => '[a-z0-9_-]+']);
-                $routes->get('/auth/link-candidate/:provider', ['controller' => 'BcAuth', 'action' => 'linkCandidate'], 'bc_auth_social_admin_link_candidate')
+                $routes->get('/bc_auth/link-candidate/:provider', ['controller' => 'BcAuth', 'action' => 'linkCandidate'], 'bc_auth_social_admin_link_candidate')
                     ->setPatterns(['provider' => '[a-z0-9_-]+']);
-                $routes->post('/auth/confirm-link/:provider', ['controller' => 'BcAuth', 'action' => 'confirmLink'], 'bc_auth_social_admin_confirm_link')
+                $routes->post('/bc_auth/confirm-link/:provider', ['controller' => 'BcAuth', 'action' => 'confirmLink'], 'bc_auth_social_admin_confirm_link')
                     ->setPatterns(['provider' => '[a-z0-9_-]+']);
-                $routes->post('/auth/cancel-link/:provider', ['controller' => 'BcAuth', 'action' => 'cancelLink'], 'bc_auth_social_admin_cancel_link')
+                $routes->post('/bc_auth/cancel-link/:provider', ['controller' => 'BcAuth', 'action' => 'cancelLink'], 'bc_auth_social_admin_cancel_link')
                     ->setPatterns(['provider' => '[a-z0-9_-]+']);
             }
         );
@@ -38,15 +38,15 @@ $routes->plugin(
     'BcAuthSocial',
     ['path' => '/bc-auth-social'],
     function (RouteBuilder $routes) {
-        $routes->get('/auth/login/:provider', ['controller' => 'BcAuth', 'action' => 'login'], 'bc_auth_social_front_login')
+        $routes->get('/bc_auth/login/:provider', ['controller' => 'BcAuth', 'action' => 'login'], 'bc_auth_social_front_login')
             ->setPatterns(['provider' => '[a-z0-9_-]+']);
-        $routes->get('/auth/callback/:provider', ['controller' => 'BcAuth', 'action' => 'callback'], 'bc_auth_social_front_callback')
+        $routes->get('/bc_auth/callback/:provider', ['controller' => 'BcAuth', 'action' => 'callback'], 'bc_auth_social_front_callback')
             ->setPatterns(['provider' => '[a-z0-9_-]+']);
-        $routes->get('/auth/link-candidate/:provider', ['controller' => 'BcAuth', 'action' => 'linkCandidate'], 'bc_auth_social_front_link_candidate')
+        $routes->get('/bc_auth/link-candidate/:provider', ['controller' => 'BcAuth', 'action' => 'linkCandidate'], 'bc_auth_social_front_link_candidate')
             ->setPatterns(['provider' => '[a-z0-9_-]+']);
-        $routes->post('/auth/confirm-link/:provider', ['controller' => 'BcAuth', 'action' => 'confirmLink'], 'bc_auth_social_front_confirm_link')
+        $routes->post('/bc_auth/confirm-link/:provider', ['controller' => 'BcAuth', 'action' => 'confirmLink'], 'bc_auth_social_front_confirm_link')
             ->setPatterns(['provider' => '[a-z0-9_-]+']);
-        $routes->post('/auth/cancel-link/:provider', ['controller' => 'BcAuth', 'action' => 'cancelLink'], 'bc_auth_social_front_cancel_link')
+        $routes->post('/bc_auth/cancel-link/:provider', ['controller' => 'BcAuth', 'action' => 'cancelLink'], 'bc_auth_social_front_cancel_link')
             ->setPatterns(['provider' => '[a-z0-9_-]+']);
     }
 );
