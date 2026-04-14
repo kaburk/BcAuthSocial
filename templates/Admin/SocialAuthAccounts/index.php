@@ -22,7 +22,7 @@ $this->BcAdmin->setTitle(__d('baser_core', '連携済みアカウント'));
           <?php foreach ($availableProviders as $provider => $label): ?>
             <a class="bca-btn bca-actions__item" href="<?php echo $this->Url->build([
               'prefix' => 'Admin',
-              'plugin' => 'BcSocialAuth',
+              'plugin' => 'BcAuthSocial',
               'controller' => 'Auth',
               'action' => 'login',
               $provider,

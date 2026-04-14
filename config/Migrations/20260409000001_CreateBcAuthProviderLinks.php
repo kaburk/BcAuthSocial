@@ -6,14 +6,14 @@ use BaserCore\Database\Migration\BcMigration;
 /**
  * auth_provider_links テーブルを作成するマイグレーション
  *
- * BcSocialAuth が管理する外部プロバイダ連携テーブルです。
+ * BcAuthSocial が管理する外部プロバイダ連携テーブルです。
  * baserCMS ユーザーと外部プロバイダアカウントを 1 対多で紐づけます。
  */
-class CreateAuthProviderLinks extends BcMigration
+class CreateBcAuthProviderLinks extends BcMigration
 {
     public function up(): void
     {
-        $this->table('auth_provider_links', [
+        $this->table('bc_auth_provider_links', [
             'collation' => 'utf8mb4_general_ci',
         ])
             ->addColumn('user_id', 'integer', [
@@ -115,6 +115,6 @@ class CreateAuthProviderLinks extends BcMigration
 
     public function down(): void
     {
-        $this->table('auth_provider_links')->drop()->save();
+        $this->table('bc_auth_provider_links')->drop()->save();
     }
 }

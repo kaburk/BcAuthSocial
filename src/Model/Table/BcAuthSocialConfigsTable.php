@@ -1,27 +1,27 @@
 <?php
 declare(strict_types=1);
 
-namespace BcSocialAuth\Model\Table;
+namespace BcAuthSocial\Model\Table;
 
-use BcSocialAuth\Model\Entity\SocialAuthConfig;
+use BcAuthSocial\Model\Entity\BcAuthSocialConfig;
 use Cake\Database\Schema\TableSchema;
 use Cake\Database\Schema\TableSchemaInterface;
 use Cake\ORM\Table;
 
 /**
- * SocialAuthConfigsTable
+ * BcAuthSocialConfigsTable
  *
  * ソーシャル認証設定のバーチャルテーブルクラスです。
  * 設定は .env に保存されるため DB テーブルは存在しませんが、
  * CakePHP の FormHelper が EntityContext を解決するためにこのクラスが必要です。
  * getSchema() でバーチャルスキーマを返し、DB へのアクセスを防ぎます。
  */
-class SocialAuthConfigsTable extends Table
+class BcAuthSocialConfigsTable extends Table
 {
     public function initialize(array $config): void
     {
         parent::initialize($config);
-        $this->setEntityClass(SocialAuthConfig::class);
+        $this->setEntityClass(BcAuthSocialConfig::class);
     }
 
     /**

@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace BcSocialAuth\Controller\Admin;
+namespace BcAuthSocial\Controller\Admin;
 
 use BaserCore\Controller\Admin\BcAdminAppController;
 use BaserCore\Utility\BcUtil;
-use BcSocialAuth\Service\SocialAuthConfigsService;
-use BcSocialAuth\Service\SocialAuthService;
+use BcAuthSocial\Service\BcAuthSocialConfigsService;
+use BcAuthSocial\Service\BcAuthSocialService;
 use Cake\Http\Response;
 
-class SocialAuthAccountsController extends BcAdminAppController
+class BcAuthSocialAccountsController extends BcAdminAppController
 {
     public function index()
     {
@@ -19,7 +19,7 @@ class SocialAuthAccountsController extends BcAdminAppController
         }
 
         $loginUser = BcUtil::loginUser();
-        $service = new SocialAuthService();
+        $service = new BcAuthSocialService();
         $links = $service->getUserLinks((int) $loginUser->id, 'Admin');
         $providerLabels = [
             'google' => 'Google',
@@ -40,7 +40,7 @@ class SocialAuthAccountsController extends BcAdminAppController
         $this->request->allowMethod(['post']);
 
         $loginUser = BcUtil::loginUser();
-        $service = new SocialAuthService();
+        $service = new BcAuthSocialService();
 
         try {
             $service->unlinkUserLink((int) $loginUser->id, $id, 'Admin');
@@ -54,10 +54,10 @@ class SocialAuthAccountsController extends BcAdminAppController
 
     private function guardSetup(): ?Response
     {
-        $configService = new SocialAuthConfigsService();
+        $configService = new BcAuthSocialConfigsService();
 
         if (!$configService->hasInstalledSchema()) {
-            $this->BcMessage->setError(__d('baser_core', 'BcSocialAuth の初期化が完了していません。先に設定画面を確認してください。'));
+            $this->BcMessage->setError(__d('baser_core', 'BcAuthSocial の初期化が完了していません。先に設定画面を確認してください。'));
             return $this->redirect($configService->getSetupUrl());
         }
 

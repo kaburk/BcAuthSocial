@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace BcSocialAuth\Model\Entity;
+namespace BcAuthSocial\Model\Entity;
 
 use Cake\ORM\Entity;
 
 /**
- * AuthProviderLink Entity
+ * BcAuthProviderLink Entity
  *
  * @property int           $id
  * @property int           $user_id
@@ -26,7 +26,7 @@ use Cake\ORM\Entity;
  * @property \Cake\I18n\FrozenTime|null $created
  * @property \Cake\I18n\FrozenTime|null $modified
  */
-class AuthProviderLink extends Entity
+class BcAuthProviderLink extends Entity
 {
     protected array $_accessible = [
         'user_id'               => true,

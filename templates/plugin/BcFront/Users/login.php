@@ -1,17 +1,18 @@
 <?php
 /**
- * baserCMS Front ログイン画面（BcSocialAuth オーバーライド）
+ * baserCMS Front ログイン画面（BcAuthSocial オーバーライド）
  *
  * @var \App\View\AppView $this
  * @var bool $savedEnable
  */
 
-use BcPasskeyAuth\Service\PasskeyAuthService;
-use BcSocialAuth\Adapter\ProviderAdapterRegistry;
+use BcAuthPasskey\Service\PasskeyAuthService;
+use BcAuthSocial\Adapter\ProviderAdapterRegistry;
+use Cake\Core\Plugin;
 
 $this->BcBaser->setTitle(__d('baser_core', 'ログイン'));
-if (class_exists(PasskeyAuthService::class)) {
-    $this->BcBaser->js('BcPasskeyAuth.passkey-auth', false, ['defer' => true]);
+if (Plugin::isLoaded('BcAuthPasskey') && class_exists(PasskeyAuthService::class)) {
+    $this->BcBaser->js('BcAuthPasskey.passkey-auth', false, ['defer' => true]);
 }
 ?>
 
@@ -68,20 +69,20 @@ if (class_exists(PasskeyAuthService::class)) {
     <?= $this->BcAdminForm->end() ?>
 
     <div class="bs-login-alt-methods">
-      <?php if (class_exists(PasskeyAuthService::class)): ?>
+      <?php if (Plugin::isLoaded('BcAuthPasskey') && class_exists(PasskeyAuthService::class)): ?>
       <div class="bs-login-passkey">
         <button
           type="button"
           id="BtnPasskeyLogin"
           class="bs-btn bs-btn--passkey"
           data-login-url="<?= $this->Url->build([
-            'plugin' => 'BcPasskeyAuth',
+            'plugin' => 'BcAuthPasskey',
             'prefix' => false,
             'controller' => 'Passkeys',
             'action' => 'login',
           ]) ?>"
           data-challenge-url="<?= $this->Url->build([
-            'plugin' => 'BcPasskeyAuth',
+            'plugin' => 'BcAuthPasskey',
             'prefix' => false,
             'controller' => 'Passkeys',
             'action' => 'loginChallenge',
@@ -96,7 +97,7 @@ if (class_exists(PasskeyAuthService::class)) {
         <div class="bs-login-divider">
           <span><?= __d('baser_core', 'または') ?></span>
         </div>
-        <?= $this->element('BcSocialAuth.social_login_buttons', ['prefix' => false]) ?>
+        <?= $this->element('BcAuthSocial.social_login_buttons', ['prefix' => false]) ?>
       <?php endif; ?>
     </div>
 

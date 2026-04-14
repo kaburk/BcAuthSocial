@@ -1,18 +1,18 @@
 <?php
 declare(strict_types=1);
 
-namespace BcSocialAuth\Adapter;
+namespace BcAuthSocial\Adapter;
 
 /**
  * ProviderAdapterRegistry
  *
- * BcSocialAuth に登録されたプロバイダアダプターを管理するシングルトンです。
+ * BcAuthSocial に登録されたプロバイダアダプターを管理するシングルトンです。
  *
  * 外部アドオンプラグインは自身の config/bootstrap.php でアダプターを登録します。
  *
  * ```php
  * // plugins/BcLineAuth/config/bootstrap.php
- * use BcSocialAuth\Adapter\ProviderAdapterRegistry;
+ * use BcAuthSocial\Adapter\ProviderAdapterRegistry;
  * use BcLineAuth\Adapter\LineProviderAdapter;
  *
  * ProviderAdapterRegistry::getInstance()->register(new LineProviderAdapter());

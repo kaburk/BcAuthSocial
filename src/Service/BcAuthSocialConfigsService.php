@@ -1,16 +1,16 @@
 <?php
 declare(strict_types=1);
 
-namespace BcSocialAuth\Service;
+namespace BcAuthSocial\Service;
 
 use BaserCore\Service\SiteConfigsServiceInterface;
 use BaserCore\Utility\BcContainerTrait;
-use BcSocialAuth\Model\Entity\SocialAuthConfig;
+use BcAuthSocial\Model\Entity\BcAuthSocialConfig;
 use Cake\Datasource\EntityInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 
-class SocialAuthConfigsService implements SocialAuthConfigsServiceInterface
+class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
 {
     use BcContainerTrait;
 
@@ -40,8 +40,8 @@ class SocialAuthConfigsService implements SocialAuthConfigsServiceInterface
             $data[$provider . '_redirect_uri'] = (string) env('BC_SOCIAL_AUTH_' . $upperProvider . '_REDIRECT_URI', '');
         }
 
-        $this->entity = new SocialAuthConfig($data, ['markClean' => true]);
-        $this->entity->setSource('BcSocialAuth.SocialAuthConfigs');
+        $this->entity = new BcAuthSocialConfig($data, ['markClean' => true]);
+        $this->entity->setSource('BcAuthSocial.BcAuthSocialConfigs');
         return $this->entity;
     }
 
@@ -55,8 +55,8 @@ class SocialAuthConfigsService implements SocialAuthConfigsServiceInterface
             $data[$provider . '_redirect_uri'] = trim((string) ($postData[$provider . '_redirect_uri'] ?? ''));
         }
 
-        $entity = new SocialAuthConfig($data);
-        $entity->setSource('BcSocialAuth.SocialAuthConfigs');
+        $entity = new BcAuthSocialConfig($data);
+        $entity->setSource('BcAuthSocial.BcAuthSocialConfigs');
 
         if (!$this->siteConfigsService->isWritableEnv()) {
             $entity->setError('env', [__d('baser_core', '.env に書き込みできないため、この画面から保存できません。')]);
@@ -159,8 +159,8 @@ class SocialAuthConfigsService implements SocialAuthConfigsServiceInterface
     {
         return [
             'prefix' => 'Admin',
-            'plugin' => 'BcSocialAuth',
-            'controller' => 'SocialAuthConfigs',
+            'plugin' => 'BcAuthSocial',
+            'controller' => 'BcAuthSocialConfigs',
             'action' => 'index',
         ];
     }
@@ -169,7 +169,7 @@ class SocialAuthConfigsService implements SocialAuthConfigsServiceInterface
     {
         return Router::url([
             'prefix' => 'Admin',
-            'plugin' => 'BcSocialAuth',
+            'plugin' => 'BcAuthSocial',
             'controller' => 'Auth',
             'action' => 'callback',
             $provider,

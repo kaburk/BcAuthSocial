@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace BcSocialAuth\Service;
+namespace BcAuthSocial\Service;
 
 use Cake\Datasource\EntityInterface;
 
-interface SocialAuthConfigsServiceInterface
+interface BcAuthSocialConfigsServiceInterface
 {
     public function get(): EntityInterface;
 

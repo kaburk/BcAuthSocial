@@ -7,8 +7,8 @@ return [
     'url' => 'https://blog.kaburk.com/',
     'adminLink' => [
         'prefix' => 'Admin',
-        'plugin' => 'BcSocialAuth',
-        'controller' => 'SocialAuthConfigs',
+        'plugin' => 'BcAuthSocial',
+        'controller' => 'BcAuthSocialConfigs',
         'action' => 'index',
     ],
     'installMessage' => __d('baser_core', 'インストール後、メニューの「ソーシャル認証設定」から Google / X の client ID・client secret を設定してください。'),

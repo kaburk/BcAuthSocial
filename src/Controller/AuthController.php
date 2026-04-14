@@ -1,14 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace BcSocialAuth\Controller;
+namespace BcAuthSocial\Controller;
 
 use BaserCore\Controller\BcFrontAppController;
 use BaserCore\Utility\BcUtil;
 use BcAuthCommon\Service\AuthLoginService;
-use BcSocialAuth\Adapter\ProviderAdapterRegistry;
-use BcSocialAuth\Service\SocialAuthConfigsService;
-use BcSocialAuth\Service\SocialAuthService;
+use BcAuthCommon\Service\AuthLoginLogService;
+use BcAuthSocial\Adapter\ProviderAdapterRegistry;
+use BcAuthSocial\Service\BcAuthSocialConfigsService;
+use BcAuthSocial\Service\BcAuthSocialService;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
 
@@ -46,7 +47,7 @@ class AuthController extends BcFrontAppController
             return $setupRedirect;
         }
 
-        $service = new SocialAuthService();
+        $service = new BcAuthSocialService();
         if (!ProviderAdapterRegistry::getInstance()->has($provider) || !$service->isProviderAvailable($provider)) {
             $this->BcMessage->setError(__d('baser_core', '未対応または未設定のプロバイダです。'));
             return $this->redirect($this->getLoginUrl());
@@ -77,16 +78,18 @@ class AuthController extends BcFrontAppController
 
         if ($error || !$code) {
             $this->BcMessage->setError(__d('baser_core', 'ログインがキャンセルされました。'));
+            AuthLoginLogService::write('link_cancel', prefix: 'Front', authSource: 'social:' . $provider, request: $this->request, detail: 'error=' . ($error ?? 'no_code'));
             return $this->redirect($this->getLoginUrl());
         }
 
-        $service = new SocialAuthService();
+        $service = new BcAuthSocialService();
         $redirect = $service->getStoredRedirect($provider, 'Front');
 
         try {
             $profile = $service->handleCallback($provider, 'Front', $code, $state);
         } catch (\RuntimeException $e) {
             $this->BcMessage->setError($e->getMessage());
+            AuthLoginLogService::write('login_failure', prefix: 'Front', authSource: 'social:' . $provider, request: $this->request, detail: $e->getMessage());
             return $this->redirect($this->getLoginUrl());
         }
 
@@ -129,7 +132,7 @@ class AuthController extends BcFrontAppController
             $service->storePendingLinkCandidate($provider, 'Front', $profile, (int) $candidateUser->id, $redirect);
             return $this->redirect([
                 'prefix' => false,
-                'plugin' => 'BcSocialAuth',
+                'plugin' => 'BcAuthSocial',
                 'controller' => 'Auth',
                 'action' => 'linkCandidate',
                 $provider,
@@ -139,6 +142,7 @@ class AuthController extends BcFrontAppController
         $this->BcMessage->setError(
             __d('baser_core', 'このアカウントは連携されていません。管理者に連絡してください。')
         );
+        AuthLoginLogService::write('login_failure', prefix: 'Front', authSource: 'social:' . $provider, request: $this->request, detail: 'no linked user');
         return $this->redirect($this->getLoginUrl());
     }
 
@@ -146,7 +150,7 @@ class AuthController extends BcFrontAppController
     {
         $this->request->allowMethod('get');
 
-        $service = new SocialAuthService();
+        $service = new BcAuthSocialService();
         $candidate = $service->getPendingLinkCandidate($provider, 'Front');
         if (!$candidate) {
             $this->BcMessage->setError(__d('baser_core', '連携候補情報が見つかりません。'));
@@ -162,7 +166,7 @@ class AuthController extends BcFrontAppController
     {
         $this->request->allowMethod('post');
 
-        $service = new SocialAuthService();
+        $service = new BcAuthSocialService();
         try {
             $result = $service->confirmPendingLinkCandidate($provider, 'Front');
             $service->updateLastLogin($result['profile']);
@@ -178,9 +182,10 @@ class AuthController extends BcFrontAppController
     {
         $this->request->allowMethod('post');
 
-        $service = new SocialAuthService();
+        $service = new BcAuthSocialService();
         $service->clearPendingLinkCandidate($provider, 'Front');
         $this->BcMessage->setInfo(__d('baser_core', '外部アカウント連携をキャンセルしました。'));
+        AuthLoginLogService::write('link_cancel', prefix: 'Front', authSource: 'social:' . $provider, request: $this->request);
 
         return $this->redirect($this->getLoginUrl());
     }
@@ -220,7 +225,7 @@ class AuthController extends BcFrontAppController
 
     private function guardSetup(): ?Response
     {
-        $configService = new SocialAuthConfigsService();
+        $configService = new BcAuthSocialConfigsService();
 
         if (!$configService->hasInstalledSchema() || !$configService->hasAnyAvailableProvider()) {
             $this->BcMessage->setError(__d('baser_core', 'ソーシャルログインの設定が完了していません。管理者に連絡してください。'));

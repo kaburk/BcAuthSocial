@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace BcSocialAuth\Controller\Admin;
+namespace BcAuthSocial\Controller\Admin;
 
 use BaserCore\Controller\Admin\BcAdminAppController;
-use BcSocialAuth\Service\SocialAuthConfigsServiceInterface;
+use BcAuthSocial\Service\BcAuthSocialConfigsServiceInterface;
 
-class SocialAuthConfigsController extends BcAdminAppController
+class BcAuthSocialConfigsController extends BcAdminAppController
 {
-    public function index(SocialAuthConfigsServiceInterface $service)
+    public function index(BcAuthSocialConfigsServiceInterface $service)
     {
         if ($this->request->is(['post', 'put'])) {
             $config = $service->update($this->getRequest()->getData());

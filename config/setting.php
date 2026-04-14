@@ -7,21 +7,21 @@ return [
         'adminNavigation' => [
             'Plugins' => [
                 'menus' => [
-                    'BcSocialAuthConfigs' => [
+                    'BcAuthSocialConfigs' => [
                         'title' => __d('baser_core', 'ソーシャル認証設定'),
                         'url' => [
                             'prefix' => 'Admin',
-                            'plugin' => 'BcSocialAuth',
-                            'controller' => 'SocialAuthConfigs',
+                            'plugin' => 'BcAuthSocial',
+                            'controller' => 'BcAuthSocialConfigs',
                             'action' => 'index',
                         ],
                     ],
-                    'BcSocialAuthAccounts' => [
+                    'BcAuthSocialAccounts' => [
                         'title' => __d('baser_core', '連携済みアカウント'),
                         'url' => [
                             'prefix' => 'Admin',
-                            'plugin' => 'BcSocialAuth',
-                            'controller' => 'SocialAuthAccounts',
+                            'plugin' => 'BcAuthSocial',
+                            'controller' => 'BcAuthSocialAccounts',
                             'action' => 'index',
                         ],
                     ],
@@ -29,7 +29,7 @@ return [
             ],
         ],
     ],
-    'BcSocialAuth' => [
+    'BcAuthSocial' => [
         'providers' => [
             'google' => [
                 'enabled' => filter_var(env('BC_SOCIAL_AUTH_GOOGLE_ENABLED', false), FILTER_VALIDATE_BOOLEAN),

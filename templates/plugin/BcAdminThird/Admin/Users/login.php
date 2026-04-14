@@ -1,14 +1,15 @@
 <?php
 /**
- * baserCMS Admin ログイン画面（BcSocialAuth オーバーライド）
+ * baserCMS Admin ログイン画面（BcAuthSocial オーバーライド）
  *
  * @var \App\View\AppView $this
  * @var string $isEnableLoginCredit
  * @var bool $savedEnable
  */
 
-use BcPasskeyAuth\Service\PasskeyAuthService;
-use BcSocialAuth\Adapter\ProviderAdapterRegistry;
+use BcAuthPasskey\Service\PasskeyAuthService;
+use BcAuthSocial\Adapter\ProviderAdapterRegistry;
+use Cake\Core\Plugin;
 
 $this->BcAdmin->setTitle(__d('baser_core', 'ログイン'));
 $this->BcBaser->js('admin/users/login.bundle', false, [
@@ -16,8 +17,8 @@ $this->BcBaser->js('admin/users/login.bundle', false, [
   'id' => 'AdminUsersLoginScript',
   'data-isEnableLoginCredit' => $isEnableLoginCredit
 ]);
-if (class_exists(PasskeyAuthService::class)) {
-    $this->BcBaser->js('BcPasskeyAuth.passkey-auth', false, ['defer' => true]);
+if (Plugin::isLoaded('BcAuthPasskey') && class_exists(PasskeyAuthService::class)) {
+    $this->BcBaser->js('BcAuthPasskey.passkey-auth', false, ['defer' => true]);
 }
 ?>
 
@@ -66,25 +67,15 @@ if (class_exists(PasskeyAuthService::class)) {
     <?= $this->BcAdminForm->end() ?>
 
     <div class="bca-login-alt-methods">
-      <?php if (class_exists(PasskeyAuthService::class)): ?>
-      <div class="bca-login-passkey">
-        <button
-          type="button"
-          id="BtnPasskeyLogin"
-          class="bca-btn bca-btn--passkey"
-          data-login-url="<?= $this->Url->build(['_name' => 'bc_passkey_auth_admin_login']) ?>"
-          data-challenge-url="<?= $this->Url->build(['_name' => 'bc_passkey_auth_admin_login_challenge']) ?>"
-        >
-          <?= __d('baser_core', 'パスキーでログイン') ?>
-        </button>
-      </div>
+      <?php if (Plugin::isLoaded('BcAuthPasskey') && class_exists(PasskeyAuthService::class)): ?>
+        <?= $this->element('BcAuthPasskey.passkey_login_button', ['prefix' => 'Admin']) ?>
       <?php endif; ?>
 
       <?php if (class_exists(ProviderAdapterRegistry::class) && !empty(ProviderAdapterRegistry::getInstance()->all())): ?>
         <div class="bca-login-divider">
           <span><?= __d('baser_core', 'または') ?></span>
         </div>
-        <?= $this->element('BcSocialAuth.social_login_buttons', ['prefix' => 'Admin']) ?>
+        <?= $this->element('BcAuthSocial.social_login_buttons', ['prefix' => 'Admin']) ?>
       <?php endif; ?>
     </div>
 

@@ -1,23 +1,23 @@
 <?php
 declare(strict_types=1);
 
-namespace BcSocialAuth\Model\Table;
+namespace BcAuthSocial\Model\Table;
 
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
 /**
- * AuthProviderLinksTable
+ * BcAuthProviderLinksTable
  *
  * baserCMS ユーザーと外部プロバイダアカウントの連携情報を管理します。
  */
-class AuthProviderLinksTable extends Table
+class BcAuthProviderLinksTable extends Table
 {
     public function initialize(array $config): void
     {
         parent::initialize($config);
 
-        $this->setTable('auth_provider_links');
+        $this->setTable('bc_auth_provider_links');
         $this->setPrimaryKey('id');
         $this->setDisplayField('provider');
 
@@ -77,7 +77,7 @@ class AuthProviderLinksTable extends Table
      *
      * @param string $provider
      * @param string $providerUserId
-     * @return \BcSocialAuth\Model\Entity\AuthProviderLink|null
+     * @return \BcAuthSocial\Model\Entity\BcAuthProviderLink|null
      */
     public function findByProviderUserId(string $provider, string $providerUserId): ?object
     {

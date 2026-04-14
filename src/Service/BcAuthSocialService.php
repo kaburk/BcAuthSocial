@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace BcSocialAuth\Service;
+namespace BcAuthSocial\Service;
 
-use BcSocialAuth\Adapter\ProviderAdapterInterface;
-use BcSocialAuth\Adapter\ProviderAdapterRegistry;
-use BcSocialAuth\Adapter\ProviderUserProfile;
-use BcSocialAuth\Model\Entity\AuthProviderLink;
-use BcSocialAuth\Model\Table\AuthProviderLinksTable;
+use BcAuthSocial\Adapter\ProviderAdapterInterface;
+use BcAuthSocial\Adapter\ProviderAdapterRegistry;
+use BcAuthSocial\Adapter\ProviderUserProfile;
+use BcAuthSocial\Model\Entity\BcAuthProviderLink;
+use BcAuthSocial\Model\Table\BcAuthProviderLinksTable;
 use Cake\Core\Configure;
 use Cake\Http\Client;
 use Cake\Http\Client\Response;
@@ -16,17 +16,17 @@ use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use RuntimeException;
 
-class SocialAuthService
+class BcAuthSocialService
 {
-    private const AUTH_SESSION_PREFIX = 'BcSocialAuth.';
-    private const PENDING_LINK_SESSION_PREFIX = 'BcSocialAuth.PendingLink.';
+    private const AUTH_SESSION_PREFIX = 'BcAuthSocial.';
+    private const PENDING_LINK_SESSION_PREFIX = 'BcAuthSocial.PendingLink.';
 
-    private AuthProviderLinksTable $links;
+    private BcAuthProviderLinksTable $links;
     private Client $httpClient;
 
     public function __construct(?Client $httpClient = null)
     {
-        $this->links = TableRegistry::getTableLocator()->get('BcSocialAuth.AuthProviderLinks');
+        $this->links = TableRegistry::getTableLocator()->get('BcAuthSocial.BcAuthProviderLinks');
         $this->httpClient = $httpClient ?? new Client();
     }
 
@@ -107,7 +107,7 @@ class SocialAuthService
             return false;
         }
 
-        $config = Configure::read('BcSocialAuth.providers.' . $provider) ?? [];
+        $config = Configure::read('BcAuthSocial.providers.' . $provider) ?? [];
 
         return !empty($config['enabled']) && !empty($config['clientId']);
     }
@@ -210,18 +210,39 @@ class SocialAuthService
         ProviderUserProfile $profile,
         string $prefix,
         string $linkedBy = 'self'
-    ): AuthProviderLink {
-        $entity = $this->links->newEntity([
-            'user_id' => $userId,
-            'prefix' => $prefix,
-            'provider' => $profile->provider,
-            'provider_user_id' => $profile->providerUserId,
-            'email' => $profile->email,
-            'email_verified' => $profile->emailVerified,
-            'name' => $profile->name,
-            'avatar_url' => $profile->avatarUrl,
-            'linked_by' => $linkedBy,
-        ]);
+    ): BcAuthProviderLink {
+        // disabled 含む既存レコードを探す（解除→再連携時の UNIQUE 違反を防ぐ）
+        $existing = $this->links->find()
+            ->where([
+                'provider' => $profile->provider,
+                'provider_user_id' => $profile->providerUserId,
+            ])
+            ->first();
+
+        if ($existing) {
+            $entity = $this->links->patchEntity($existing, [
+                'user_id' => $userId,
+                'prefix' => $prefix,
+                'email' => $profile->email,
+                'email_verified' => $profile->emailVerified,
+                'name' => $profile->name,
+                'avatar_url' => $profile->avatarUrl,
+                'linked_by' => $linkedBy,
+                'disabled' => false,
+            ]);
+        } else {
+            $entity = $this->links->newEntity([
+                'user_id' => $userId,
+                'prefix' => $prefix,
+                'provider' => $profile->provider,
+                'provider_user_id' => $profile->providerUserId,
+                'email' => $profile->email,
+                'email_verified' => $profile->emailVerified,
+                'name' => $profile->name,
+                'avatar_url' => $profile->avatarUrl,
+                'linked_by' => $linkedBy,
+            ]);
+        }
 
         $saved = $this->links->save($entity);
         if (!$saved) {
@@ -346,7 +367,7 @@ class SocialAuthService
 
     private function getProviderConfig(string $provider): array
     {
-        $config = Configure::read('BcSocialAuth.providers.' . $provider) ?? [];
+        $config = Configure::read('BcAuthSocial.providers.' . $provider) ?? [];
         if (empty($config['enabled'])) {
             throw new RuntimeException('このプロバイダは現在無効です。');
         }
@@ -359,13 +380,13 @@ class SocialAuthService
 
     private function buildCallbackUrl(string $provider, string $prefix): string
     {
-        $config = Configure::read('BcSocialAuth.providers.' . $provider) ?? [];
+        $config = Configure::read('BcAuthSocial.providers.' . $provider) ?? [];
         if (!empty($config['redirectUri'])) {
             return (string)$config['redirectUri'];
         }
 
         return Router::url([
-            'plugin' => 'BcSocialAuth',
+            'plugin' => 'BcAuthSocial',
             'prefix' => $prefix === 'Front' ? false : $prefix,
             'controller' => 'Auth',
             'action' => 'callback',
@@ -375,7 +396,7 @@ class SocialAuthService
 
     private function canSuggestLinkCandidate(string $provider): bool
     {
-        return (bool)(Configure::read('BcSocialAuth.providers.' . $provider . '.allowLinkCandidate') ?? false);
+        return (bool)(Configure::read('BcAuthSocial.providers.' . $provider . '.allowLinkCandidate') ?? false);
     }
 
     private function hydrateProfile(array $profile): ProviderUserProfile

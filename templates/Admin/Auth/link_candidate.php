@@ -3,7 +3,7 @@
  * @var \App\View\AppView $this
  * @var string $provider
  * @var \BaserCore\Model\Entity\User $candidateUser
- * @var \BcSocialAuth\Adapter\ProviderUserProfile $profile
+ * @var \BcAuthSocial\Adapter\ProviderUserProfile $profile
  */
 
 $this->BcAdmin->setTitle(__d('baser_core', '外部アカウント連携の確認'));
