@@ -50,4 +50,10 @@ interface ProviderAdapterInterface
 
     /** UserInfo リクエストに追加するクエリパラメータを返す */
     public function getAdditionalUserInfoParams(): array;
+
+    /**
+     * トークンエンドポイントの認証に Basic 認証ヘッダー（client_id:client_secret の Base64）を使うかどうかを返す。
+     * X（機密クライアント）のように HTTP Basic Auth が必要なプロバイダで true を返す。
+     */
+    public function usesBasicAuthForToken(): bool;
 }

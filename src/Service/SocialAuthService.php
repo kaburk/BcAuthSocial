@@ -279,12 +279,24 @@ class SocialAuthService
             'grant_type' => 'authorization_code',
             'code' => $code,
             'redirect_uri' => $this->buildCallbackUrl($adapter->getProvider(), $prefix),
-            'client_id' => $config['clientId'],
         ];
 
-        if (!empty($config['clientSecret'])) {
-            $params['client_secret'] = $config['clientSecret'];
+        $headers = [
+            'Content-Type' => 'application/x-www-form-urlencoded',
+            'Accept' => 'application/json',
+        ];
+
+        if ($adapter->usesBasicAuthForToken()) {
+            // 機密クライアント（X など）: Basic 認証ヘッダーで client 認証
+            $headers['Authorization'] = 'Basic ' . base64_encode($config['clientId'] . ':' . ($config['clientSecret'] ?? ''));
+        } else {
+            // 通常クライアント: ボディパラメータで client 認証
+            $params['client_id'] = $config['clientId'];
+            if (!empty($config['clientSecret'])) {
+                $params['client_secret'] = $config['clientSecret'];
+            }
         }
+
         if ($adapter->usesPkce()) {
             $params['code_verifier'] = $stored['code_verifier'] ?? '';
         }
@@ -292,12 +304,7 @@ class SocialAuthService
         $response = $this->httpClient->post(
             $adapter->getTokenEndpoint(),
             http_build_query($params),
-            [
-                'headers' => [
-                    'Content-Type' => 'application/x-www-form-urlencoded',
-                    'Accept' => 'application/json',
-                ],
-            ]
+            ['headers' => $headers]
         );
 
         return $this->decodeJsonResponse($response, 'アクセストークンの取得に失敗しました。');
@@ -359,7 +366,7 @@ class SocialAuthService
 
         return Router::url([
             'plugin' => 'BcSocialAuth',
-            'prefix' => $prefix,
+            'prefix' => $prefix === 'Front' ? false : $prefix,
             'controller' => 'Auth',
             'action' => 'callback',
             $provider,

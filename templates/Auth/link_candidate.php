@@ -6,10 +6,10 @@
  * @var \BcSocialAuth\Adapter\ProviderUserProfile $profile
  */
 
-$this->BcAdmin->setTitle(__d('baser_core', '外部アカウント連携の確認'));
+$this->BcBaser->setTitle(__d('baser_core', '外部アカウント連携の確認'));
 ?>
 
-<div class="bca-contents-body">
+<div class="bs-contents-body">
   <?php $this->BcBaser->flash() ?>
 
   <div class="section">
@@ -17,7 +17,7 @@ $this->BcAdmin->setTitle(__d('baser_core', '外部アカウント連携の確認
     <p><?= __d('baser_core', '次の baserCMS ユーザーに連携してログインします。') ?></p>
   </div>
 
-  <table class="list-table bca-table-listup">
+  <table class="list-table bs-table-listup">
     <tr>
       <th><?= __d('baser_core', 'プロバイダ') ?></th>
       <td><?= h($provider) ?></td>
@@ -40,19 +40,19 @@ $this->BcAdmin->setTitle(__d('baser_core', '外部アカウント連携の確認
     </tr>
   </table>
 
-  <div class="submit bca-actions">
+  <div class="submit bs-actions">
     <?= $this->BcAdminForm->create(null, ['url' => ['action' => 'confirmLink', $provider]]) ?>
     <?= $this->BcAdminForm->button(__d('baser_core', '連携してログイン'), [
-      'class' => 'bca-btn bca-btn--save',
+      'class' => 'bs-btn bs-btn--login',
       'type' => 'submit',
     ]) ?>
     <?= $this->BcAdminForm->end() ?>
   </div>
 
-  <div class="submit bca-actions" style="margin-top: 12px;">
+  <div class="submit bs-actions" style="margin-top: 12px;">
     <?= $this->BcAdminForm->create(null, ['url' => ['action' => 'cancelLink', $provider]]) ?>
     <?= $this->BcAdminForm->button(__d('baser_core', 'キャンセル'), [
-      'class' => 'bca-btn',
+      'class' => 'bs-btn',
       'type' => 'submit',
     ]) ?>
     <?= $this->BcAdminForm->end() ?>

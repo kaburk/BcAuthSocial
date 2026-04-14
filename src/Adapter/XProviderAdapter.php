@@ -43,6 +43,9 @@ class XProviderAdapter implements ProviderAdapterInterface
     /** OIDC ではない */
     public function usesIdToken(): bool { return false; }
 
+    /** X 機密クライアントはトークンエンドポイントで Basic 認証が必要 */
+    public function usesBasicAuthForToken(): bool { return true; }
+
     public function getAdditionalAuthParams(): array
     {
         return [];

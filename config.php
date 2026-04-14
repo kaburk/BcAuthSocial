@@ -3,8 +3,8 @@ return [
     'type' => 'Plugin',
     'title' => __d('baser_core', 'ソーシャル認証'),
     'description' => __d('baser_core', 'Google・X などの外部プロバイダを使って baserCMS 管理画面にログインできるようにするプラグインです。'),
-    'author' => 'baserCMS',
-    'url' => 'https://basercms.net/',
+    'author' => 'kaburk',
+    'url' => 'https://blog.kaburk.com/',
     'adminLink' => [
         'prefix' => 'Admin',
         'plugin' => 'BcSocialAuth',

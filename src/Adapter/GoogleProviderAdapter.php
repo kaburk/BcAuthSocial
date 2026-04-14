@@ -38,6 +38,9 @@ class GoogleProviderAdapter implements ProviderAdapterInterface
 
     public function usesIdToken(): bool { return true; }
 
+    /** Google はボディパラメータで認証するため Basic 認証ヘッダーは不要 */
+    public function usesBasicAuthForToken(): bool { return false; }
+
     public function getAdditionalAuthParams(): array
     {
         return [];

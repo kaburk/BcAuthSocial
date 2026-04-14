@@ -76,26 +76,50 @@ ProviderAdapterRegistry::getInstance()->register(new LineProviderAdapter());
 
 ## 実装ステータス
 
-フェーズ 1 の一部まで実装済みです。
+フェーズ 1 実装済み（Admin prefix 対応）。Front prefix は未対応。
 
-実装済み:
+### 作成済みファイル
 
-- `ProviderAdapterInterface` / `ProviderAdapterRegistry` による provider 拡張基盤
-- Google / X の adapter 実装
-- `auth_provider_links` マイグレーション、Entity、Table
-- Admin 向け `AuthController` とルーティング
-- Admin 向け provider 設定画面
-- install 完了後の設定画面への遷移
-- DB 未初期化 / provider 未設定時のガード
-- ログイン済み Admin ユーザー向けの連携済みアカウント一覧 / 連携解除 UI
-- 連携済みアカウント画面からの追加連携導線
-- Google / X の認可 URL 生成
-- Google を中心とした token exchange / UserInfo 取得
-- Admin ログイン画面へのソーシャルログインボタン表示
-- `BcAuthCommon` の `AuthLoginService` への接続
-- 未連携時の連携候補確認画面
+| ファイル | 概要 |
+|---|---|
+| `config.php` | adminLink / installMessage 設定 |
+| `config/routes.php` | Admin ルート定義 |
+| `config/setting.php` | env ベースの provider 設定（providerLabels / envKeys / callbackUrls） |
+| `config/Migrations/20260409000001_CreateAuthProviderLinks.php` | マイグレーション |
+| `src/BcSocialAuthPlugin.php` | プラグインクラス |
+| `src/Adapter/ProviderAdapterInterface.php` | アダプタインターフェース（外部アドオン向け公開 API） |
+| `src/Adapter/ProviderAdapterRegistry.php` | シングルトン registry |
+| `src/Adapter/ProviderUserProfile.php` | プロフィール DTO |
+| `src/Adapter/GoogleProviderAdapter.php` | Google OIDC アダプタ |
+| `src/Adapter/XProviderAdapter.php` | X（OAuth 2.0 / PKCE）アダプタ |
+| `src/Model/Entity/AuthProviderLink.php` | エンティティ |
+| `src/Model/Table/AuthProviderLinksTable.php` | テーブルクラス |
+| `src/Model/Entity/SocialAuthConfig.php` | バーチャルエンティティ（env 読み書き） |
+| `src/Model/Table/SocialAuthConfigsTable.php` | バーチャルテーブル |
+| `src/Service/SocialAuthService.php` | 認可 URL 生成・callback 処理・ユーザーひも付け・連携候補フロー |
+| `src/Service/SocialAuthConfigsService.php` | provider 設定の読み書き（.env / 画面表示） |
+| `src/Service/SocialAuthConfigsServiceInterface.php` | インターフェース |
+| `src/ServiceProvider/BcSocialAuthServiceProvider.php` | DI 登録 |
+| `src/Controller/Admin/AuthController.php` | login / callback / link_candidate / confirm_link / cancel_link |
+| `src/Controller/Admin/SocialAuthAccountsController.php` | 連携済みアカウント管理（一覧・解除・追加連携導線） |
+| `src/Controller/Admin/SocialAuthConfigsController.php` | provider 設定画面 |
+| `templates/Admin/Auth/link_candidate.php` | 連携候補確認画面 |
+| `templates/Admin/SocialAuthAccounts/index.php` | 連携済みアカウント一覧 |
+| `templates/Admin/SocialAuthConfigs/index.php` | provider 設定画面 |
+| `templates/element/social_login_buttons.php` | ログイン画面埋め込み用ソーシャルボタン element |
 
-未完了:
+### ログイン画面への統合状況
 
-- Front プレフィックス対応
+Admin ログイン画面へのソーシャルログインボタン表示は、**BcPasskeyAuth の template override 経由**で実現しています。
+
+- BcPasskeyAuth が有効な場合：BcPasskeyAuth の login.php override が `BcSocialAuth.social_login_buttons` element を条件付きでインクルードする
+- **BcPasskeyAuth なしで BcSocialAuth のみインストールした場合：ログイン画面にソーシャルボタンが表示されない**（残タスク #1 参照）
+
+### 残タスク
+
+1. **単体動作対応**（優先度: 高）: BcPasskeyAuth がなくても Admin ログイン画面にソーシャルボタンが表示されるよう、BcSocialAuth 独自の `templates/plugin/BcAdminThird/Admin/Users/login.php` override を追加する
+2. **Front prefix 対応**（優先度: 高）: Front 向けの `AuthController`（login / callback）と routes を追加する
+3. **Front ログイン画面統合**（優先度: 高・2の後）: Front ログイン画面へのソーシャルボタン差し込みを実装する
+4. **X provider 実運用検証**（優先度: 中）: X PKCE フローの end-to-end 確認
+5. **Docker e2e 動作確認**（優先度: 高）: 管理画面からインストール → Google/X 認証フローの一気通貫確認
 - X の実運用検証

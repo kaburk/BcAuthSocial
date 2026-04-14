@@ -29,40 +29,75 @@ $routes->plugin(
                     ->setPatterns(['id' => '[0-9]+']);
 
                 $routes->get(
-                    '/auth/:provider/login',
+                    '/auth/login/:provider',
                     ['controller' => 'Auth', 'action' => 'login'],
                     'bc_social_auth_admin_login'
                 )
                     ->setPatterns(['provider' => '[a-z0-9_-]+']);
 
                 $routes->get(
-                    '/auth/:provider/callback',
+                    '/auth/callback/:provider',
                     ['controller' => 'Auth', 'action' => 'callback'],
                     'bc_social_auth_admin_callback'
                 )
                     ->setPatterns(['provider' => '[a-z0-9_-]+']);
 
                 $routes->get(
-                    '/auth/:provider/link-candidate',
-                    ['controller' => 'Auth', 'action' => 'link_candidate'],
+                    '/auth/link-candidate/:provider',
+                    ['controller' => 'Auth', 'action' => 'linkCandidate'],
                     'bc_social_auth_admin_link_candidate'
                 )
                     ->setPatterns(['provider' => '[a-z0-9_-]+']);
 
                 $routes->post(
-                    '/auth/:provider/confirm-link',
-                    ['controller' => 'Auth', 'action' => 'confirm_link'],
+                    '/auth/confirm-link/:provider',
+                    ['controller' => 'Auth', 'action' => 'confirmLink'],
                     'bc_social_auth_admin_confirm_link'
                 )
                     ->setPatterns(['provider' => '[a-z0-9_-]+']);
 
                 $routes->post(
-                    '/auth/:provider/cancel-link',
-                    ['controller' => 'Auth', 'action' => 'cancel_link'],
+                    '/auth/cancel-link/:provider',
+                    ['controller' => 'Auth', 'action' => 'cancelLink'],
                     'bc_social_auth_admin_cancel_link'
                 )
                     ->setPatterns(['provider' => '[a-z0-9_-]+']);
             }
         );
+
+        $routes->get(
+            '/auth/login/:provider',
+            ['controller' => 'Auth', 'action' => 'login'],
+            'bc_social_auth_front_login'
+        )
+            ->setPatterns(['provider' => '[a-z0-9_-]+']);
+
+        $routes->get(
+            '/auth/callback/:provider',
+            ['controller' => 'Auth', 'action' => 'callback'],
+            'bc_social_auth_front_callback'
+        )
+            ->setPatterns(['provider' => '[a-z0-9_-]+']);
+
+        $routes->get(
+            '/auth/link-candidate/:provider',
+            ['controller' => 'Auth', 'action' => 'linkCandidate'],
+            'bc_social_auth_front_link_candidate'
+        )
+            ->setPatterns(['provider' => '[a-z0-9_-]+']);
+
+        $routes->post(
+            '/auth/confirm-link/:provider',
+            ['controller' => 'Auth', 'action' => 'confirmLink'],
+            'bc_social_auth_front_confirm_link'
+        )
+            ->setPatterns(['provider' => '[a-z0-9_-]+']);
+
+        $routes->post(
+            '/auth/cancel-link/:provider',
+            ['controller' => 'Auth', 'action' => 'cancelLink'],
+            'bc_social_auth_front_cancel_link'
+        )
+            ->setPatterns(['provider' => '[a-z0-9_-]+']);
     }
 );
