@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace BcAuthSocial\Model\Table;
 
 use BcAuthSocial\Model\Entity\BcAuthSocialConfig;
+use Cake\Core\Configure;
 use Cake\Database\Schema\TableSchema;
 use Cake\Database\Schema\TableSchemaInterface;
 use Cake\ORM\Table;
@@ -30,8 +31,10 @@ class BcAuthSocialConfigsTable extends Table
     public function getSchema(): TableSchemaInterface
     {
         if ($this->_schema === null) {
+            $registry = Configure::read('BcAuthSocial') ?? [];
+            $providers = array_keys(array_filter($registry, fn($v) => is_array($v) && isset($v['label'])));
             $schema = new TableSchema('social_auth_configs');
-            foreach (['google', 'x'] as $provider) {
+            foreach ($providers as $provider) {
                 $schema->addColumn($provider . '_enabled', ['type' => 'boolean', 'null' => true, 'default' => false]);
                 $schema->addColumn($provider . '_client_id', ['type' => 'string', 'null' => true, 'default' => '']);
                 $schema->addColumn($provider . '_client_secret', ['type' => 'string', 'null' => true, 'default' => '']);

@@ -28,7 +28,7 @@ class LineProviderAdapter implements ProviderAdapterInterface
 
     public function getTokenEndpoint(): string
     {
-        return 'https://access.line.me/oauth2/v2.1/token';
+        return 'https://api.line.me/oauth2/v2.1/token';
     }
 
     public function getUserInfoEndpoint(): ?string

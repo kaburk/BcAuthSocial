@@ -7,6 +7,7 @@ use BaserCore\Controller\Admin\BcAdminAppController;
 use BaserCore\Utility\BcUtil;
 use BcAuthSocial\Service\BcAuthSocialConfigsService;
 use BcAuthSocial\Service\BcAuthSocialService;
+use Cake\Core\Configure;
 use Cake\Http\Response;
 
 class BcAuthSocialAccountsController extends BcAdminAppController
@@ -21,10 +22,13 @@ class BcAuthSocialAccountsController extends BcAdminAppController
         $loginUser = BcUtil::loginUser();
         $service = new BcAuthSocialService();
         $links = $service->getUserLinks((int) $loginUser->id, 'Admin');
-        $providerLabels = [
-            'google' => 'Google',
-            'x' => 'X',
-        ];
+        $registry = Configure::read('BcAuthSocial') ?? [];
+        $providerLabels = [];
+        foreach ($registry as $provider => $cfg) {
+            if (is_array($cfg) && isset($cfg['label'])) {
+                $providerLabels[$provider] = $cfg['label'];
+            }
+        }
         $availableProviders = [];
         foreach ($providerLabels as $provider => $label) {
             if ($service->isProviderAvailable($provider)) {

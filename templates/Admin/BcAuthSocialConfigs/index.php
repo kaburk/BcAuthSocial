@@ -8,6 +8,7 @@
  * @var array $providerLabels
  * @var array $envKeys
  * @var array $callbackUrls
+ * @var array $providerGuides  BcAuthSocial.providerGuides から渡されるプロバイダーごとの手順
  */
 
 $this->BcAdmin->setTitle(__d('baser_core', 'ソーシャル認証設定'));
@@ -52,66 +53,6 @@ $this->BcAdmin->setTitle(__d('baser_core', 'ソーシャル認証設定'));
   </div>
 </section>
 
-<?php
-$providerGuides = [
-    'google' => [
-        'console_url' => 'https://console.cloud.google.com/',
-        'console_label' => 'Google Cloud Console',
-        'steps' => [
-            __d('baser_core', '<a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">Google Cloud Console</a> にアクセスし、プロジェクトを作成（または選択）します。'),
-            __d('baser_core', '左メニューの「APIとサービス」→「認証情報」を開きます。'),
-            __d('baser_core', '「認証情報を作成」→「OAuth クライアント ID」を選択します。'),
-            __d('baser_core', 'アプリケーションの種類で「ウェブ アプリケーション」を選択します。'),
-            __d('baser_core', '「承認済みのリダイレクト URI」に下記の Callback URL を追加します。'),
-            __d('baser_core', '作成後に表示される「クライアント ID」と「クライアント シークレット」をコピーして入力します。'),
-        ],
-    ],
-    'x' => [
-        'console_url' => 'https://developer.twitter.com/en/portal/dashboard',
-        'console_label' => 'X Developer Portal',
-        'steps' => [
-            __d('baser_core', '<a href="https://developer.twitter.com/en/portal/dashboard" target="_blank" rel="noopener noreferrer">X Developer Portal</a> にアクセスし、App を作成（または選択）します。'),
-            __d('baser_core', 'App の「Settings」タブ →「User authentication settings」の「Edit」を開きます。'),
-            __d('baser_core', '「OAuth 2.0」を On にし、Type of App で「Web App, Automated App or Bot」を選択します。'),
-            __d('baser_core', '「Callback URI / Redirect URL」に下記の Callback URL を追加し、保存します。'),
-            __d('baser_core', '「Keys and tokens」タブ →「OAuth 2.0 Client ID and Client Secret」の「Generate」または「Regenerate」でキーを取得し、入力します。'),
-        ],
-    ],
-    'github' => [
-        'console_url' => 'https://github.com/settings/developers',
-        'console_label' => 'GitHub Developer Settings',
-        'steps' => [
-            __d('baser_core', '<a href="https://github.com/settings/developers" target="_blank" rel="noopener noreferrer">GitHub Developer Settings</a> にアクセスし、「OAuth Apps」→「New OAuth App」を選択します。'),
-            __d('baser_core', '「Homepage URL」にサイトの URL を入力します。'),
-            __d('baser_core', '「Authorization callback URL」に下記の Callback URL を入力し、「Register application」をクリックします。'),
-            __d('baser_core', 'アプリ詳細画面で「Client ID」をコピーし、「Generate a new client secret」でシークレットを生成してコピーします。'),
-            __d('baser_core', 'コピーした「Client ID」と「Client Secret」をここに入力します。'),
-        ],
-    ],
-    'line' => [
-        'console_url' => 'https://developers.line.biz/',
-        'console_label' => 'LINE Developers Console',
-        'steps' => [
-            __d('baser_core', '<a href="https://developers.line.biz/" target="_blank" rel="noopener noreferrer">LINE Developers Console</a> にアクセスし、プロバイダーを選択（または作成）します。'),
-            __d('baser_core', '「チャンネル作成」→「LINE ログイン」を選択し、チャンネル情報を入力して作成します。'),
-            __d('baser_core', '「LINE ログイン設定」タブ →「コールバック URL」欄に下記の Callback URL を入力して保存します。'),
-            __d('baser_core', '「チャンネル基本設定」タブの「チャンネル ID」（Client ID）と「チャンネルシークレット」（Client Secret）をコピーして入力します。'),
-            __d('baser_core', '※ メールアドレスの取得には LINE 側の審査が必要です。審査前はメール連携なしでログインのみ可能です。'),
-        ],
-    ],
-    'microsoft' => [
-        'console_url' => 'https://entra.microsoft.com/',
-        'console_label' => 'Microsoft Entra 管理センター',
-        'steps' => [
-            __d('baser_core', '<a href="https://entra.microsoft.com/" target="_blank" rel="noopener noreferrer">Microsoft Entra 管理センター</a>（または <a href="https://portal.azure.com/" target="_blank" rel="noopener noreferrer">Azure Portal</a>）にアクセスします。'),
-            __d('baser_core', '「アプリの登録」→「新規登録」を選択し、アプリ名を入力します。サポートされているアカウントの種類は「任意の組織ディレクトリ内のアカウントと個人の Microsoft アカウント」を選択します。'),
-            __d('baser_core', '「リダイレクト URI」のプラットフォームに「Web」を選択し、下記の Callback URL を入力して「登録」をクリックします。'),
-            __d('baser_core', '「証明書とシークレット」→「新しいクライアントシークレット」を追加し、表示されたシークレット値をコピーします（画面遷移後は再表示されません）。'),
-            __d('baser_core', '「概要」ページの「アプリケーション（クライアント）ID」をコピーし、Client ID に入力します。'),
-        ],
-    ],
-];
-?>
 <?php foreach ($providerLabels as $provider => $label):
   $collapseId = 'ProviderSection-' . h($provider);
 ?>

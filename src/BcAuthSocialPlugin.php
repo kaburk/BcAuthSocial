@@ -28,7 +28,7 @@ class BcAuthSocialPlugin extends BcPlugin
     }
 
     /**
-     * ProviderAdapterRegistry に Google と X を登録する
+     * ProviderAdapterRegistry に サービス（GoogleやXなど）を登録する
      */
     public function bootstrap(PluginApplicationInterface $app): void
     {

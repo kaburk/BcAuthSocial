@@ -6,6 +6,7 @@ namespace BcAuthSocial\Service;
 use BaserCore\Service\SiteConfigsServiceInterface;
 use BaserCore\Utility\BcContainerTrait;
 use BcAuthSocial\Model\Entity\BcAuthSocialConfig;
+use Cake\Core\Configure;
 use Cake\Datasource\EntityInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
@@ -13,8 +14,6 @@ use Cake\Routing\Router;
 class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
 {
     use BcContainerTrait;
-
-    private const PROVIDERS = ['google', 'x', 'github', 'line', 'microsoft'];
 
     private SiteConfigsServiceInterface $siteConfigsService;
 
@@ -25,6 +24,28 @@ class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
         $this->siteConfigsService = $this->getService(SiteConfigsServiceInterface::class);
     }
 
+    /**
+     * setting.php の BcAuthSocial キーからプロバイダー識別子の一覧を返す。
+     * 各プロバイダーエントリーは 'label' キーを持つ配列として識別する。
+     */
+    private function getProviderList(): array
+    {
+        $registry = Configure::read('BcAuthSocial') ?? [];
+        return array_keys(array_filter($registry, fn($v) => is_array($v) && isset($v['label'])));
+    }
+
+    /**
+     * 指定プロバイダーの Configure 設定と envPrefix を返す。
+     */
+    private function getProviderCfg(string $provider): array
+    {
+        $cfg = Configure::read('BcAuthSocial.' . $provider) ?? [];
+        if (!isset($cfg['envPrefix'])) {
+            $cfg['envPrefix'] = 'BC_SOCIAL_AUTH_' . strtoupper($provider);
+        }
+        return $cfg;
+    }
+
     public function get(): EntityInterface
     {
         if ($this->entity) {
@@ -32,12 +53,13 @@ class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
         }
 
         $data = [];
-        foreach (self::PROVIDERS as $provider) {
-            $upperProvider = strtoupper($provider);
-            $data[$provider . '_enabled'] = filter_var(env('BC_SOCIAL_AUTH_' . $upperProvider . '_ENABLED', false), FILTER_VALIDATE_BOOLEAN);
-            $data[$provider . '_client_id'] = (string) env('BC_SOCIAL_AUTH_' . $upperProvider . '_CLIENT_ID', '');
-            $data[$provider . '_client_secret'] = (string) env('BC_SOCIAL_AUTH_' . $upperProvider . '_CLIENT_SECRET', '');
-            $data[$provider . '_redirect_uri'] = (string) env('BC_SOCIAL_AUTH_' . $upperProvider . '_REDIRECT_URI', '');
+        foreach ($this->getProviderList() as $provider) {
+            $cfg = $this->getProviderCfg($provider);
+            $prefix = $cfg['envPrefix'];
+            $data[$provider . '_enabled'] = filter_var(env($prefix . '_ENABLED', false), FILTER_VALIDATE_BOOLEAN);
+            $data[$provider . '_client_id'] = (string) env($prefix . '_CLIENT_ID', '');
+            $data[$provider . '_client_secret'] = (string) env($prefix . '_CLIENT_SECRET', '');
+            $data[$provider . '_redirect_uri'] = (string) env($prefix . '_REDIRECT_URI', '');
         }
 
         $this->entity = new BcAuthSocialConfig($data, ['markClean' => true]);
@@ -48,7 +70,7 @@ class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
     public function update(array $postData): EntityInterface
     {
         $data = [];
-        foreach (self::PROVIDERS as $provider) {
+        foreach ($this->getProviderList() as $provider) {
             $data[$provider . '_enabled'] = !empty($postData[$provider . '_enabled']);
             $data[$provider . '_client_id'] = trim((string) ($postData[$provider . '_client_id'] ?? ''));
             $data[$provider . '_client_secret'] = trim((string) ($postData[$provider . '_client_secret'] ?? ''));
@@ -63,7 +85,7 @@ class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
             return $entity;
         }
 
-        foreach (self::PROVIDERS as $provider) {
+        foreach ($this->getProviderList() as $provider) {
             if (!$data[$provider . '_enabled']) {
                 continue;
             }
@@ -82,12 +104,12 @@ class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
             return $entity;
         }
 
-        foreach (self::PROVIDERS as $provider) {
-            $upperProvider = strtoupper($provider);
-            $this->siteConfigsService->putEnv('BC_SOCIAL_AUTH_' . $upperProvider . '_ENABLED', $data[$provider . '_enabled'] ? 'true' : 'false');
-            $this->siteConfigsService->putEnv('BC_SOCIAL_AUTH_' . $upperProvider . '_CLIENT_ID', $data[$provider . '_client_id']);
-            $this->siteConfigsService->putEnv('BC_SOCIAL_AUTH_' . $upperProvider . '_CLIENT_SECRET', $data[$provider . '_client_secret']);
-            $this->siteConfigsService->putEnv('BC_SOCIAL_AUTH_' . $upperProvider . '_REDIRECT_URI', $data[$provider . '_redirect_uri']);
+        foreach ($this->getProviderList() as $provider) {
+            $prefix = $this->getProviderCfg($provider)['envPrefix'];
+            $this->siteConfigsService->putEnv($prefix . '_ENABLED', $data[$provider . '_enabled'] ? 'true' : 'false');
+            $this->siteConfigsService->putEnv($prefix . '_CLIENT_ID', $data[$provider . '_client_id']);
+            $this->siteConfigsService->putEnv($prefix . '_CLIENT_SECRET', $data[$provider . '_client_secret']);
+            $this->siteConfigsService->putEnv($prefix . '_REDIRECT_URI', $data[$provider . '_redirect_uri']);
         }
 
         $this->entity = null;
@@ -102,52 +124,10 @@ class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
             'hasInstalledSchema' => $this->hasInstalledSchema(),
             'hasAnyAvailableProvider' => $this->hasAnyAvailableProvider(),
             'setupUrl' => $this->getSetupUrl(),
-            'providerLabels' => [
-                'google' => 'Google',
-                'x' => 'X',
-                'github' => 'GitHub',
-                'line' => 'LINE',
-                'microsoft' => 'Microsoft',
-            ],
-            'envKeys' => [
-                'google' => [
-                    'enabled' => 'BC_SOCIAL_AUTH_GOOGLE_ENABLED',
-                    'client_id' => 'BC_SOCIAL_AUTH_GOOGLE_CLIENT_ID',
-                    'client_secret' => 'BC_SOCIAL_AUTH_GOOGLE_CLIENT_SECRET',
-                    'redirect_uri' => 'BC_SOCIAL_AUTH_GOOGLE_REDIRECT_URI',
-                ],
-                'x' => [
-                    'enabled' => 'BC_SOCIAL_AUTH_X_ENABLED',
-                    'client_id' => 'BC_SOCIAL_AUTH_X_CLIENT_ID',
-                    'client_secret' => 'BC_SOCIAL_AUTH_X_CLIENT_SECRET',
-                    'redirect_uri' => 'BC_SOCIAL_AUTH_X_REDIRECT_URI',
-                ],
-                'github' => [
-                    'enabled' => 'BC_SOCIAL_AUTH_GITHUB_ENABLED',
-                    'client_id' => 'BC_SOCIAL_AUTH_GITHUB_CLIENT_ID',
-                    'client_secret' => 'BC_SOCIAL_AUTH_GITHUB_CLIENT_SECRET',
-                    'redirect_uri' => 'BC_SOCIAL_AUTH_GITHUB_REDIRECT_URI',
-                ],
-                'line' => [
-                    'enabled' => 'BC_SOCIAL_AUTH_LINE_ENABLED',
-                    'client_id' => 'BC_SOCIAL_AUTH_LINE_CLIENT_ID',
-                    'client_secret' => 'BC_SOCIAL_AUTH_LINE_CLIENT_SECRET',
-                    'redirect_uri' => 'BC_SOCIAL_AUTH_LINE_REDIRECT_URI',
-                ],
-                'microsoft' => [
-                    'enabled' => 'BC_SOCIAL_AUTH_MICROSOFT_ENABLED',
-                    'client_id' => 'BC_SOCIAL_AUTH_MICROSOFT_CLIENT_ID',
-                    'client_secret' => 'BC_SOCIAL_AUTH_MICROSOFT_CLIENT_SECRET',
-                    'redirect_uri' => 'BC_SOCIAL_AUTH_MICROSOFT_REDIRECT_URI',
-                ],
-            ],
-            'callbackUrls' => [
-                'google' => $this->buildCallbackUrl('google'),
-                'x' => $this->buildCallbackUrl('x'),
-                'github' => $this->buildCallbackUrl('github'),
-                'line' => $this->buildCallbackUrl('line'),
-                'microsoft' => $this->buildCallbackUrl('microsoft'),
-            ],
+            'providerLabels' => $this->buildProviderLabels(),
+            'envKeys' => $this->buildEnvKeys(),
+            'callbackUrls' => $this->buildCallbackUrls(),
+            'providerGuides' => $this->buildProviderGuides(),
         ];
     }
 
@@ -161,15 +141,15 @@ class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
 
     public function hasAnyAvailableProvider(): bool
     {
-        foreach (self::PROVIDERS as $provider) {
-            $upperProvider = strtoupper($provider);
-            if (!filter_var(env('BC_SOCIAL_AUTH_' . $upperProvider . '_ENABLED', false), FILTER_VALIDATE_BOOLEAN)) {
+        foreach ($this->getProviderList() as $provider) {
+            $prefix = $this->getProviderCfg($provider)['envPrefix'];
+            if (!filter_var(env($prefix . '_ENABLED', false), FILTER_VALIDATE_BOOLEAN)) {
                 continue;
             }
-            if ((string) env('BC_SOCIAL_AUTH_' . $upperProvider . '_CLIENT_ID', '') === '') {
+            if ((string) env($prefix . '_CLIENT_ID', '') === '') {
                 continue;
             }
-            if ((string) env('BC_SOCIAL_AUTH_' . $upperProvider . '_CLIENT_SECRET', '') === '') {
+            if ((string) env($prefix . '_CLIENT_SECRET', '') === '') {
                 continue;
             }
 
@@ -177,6 +157,51 @@ class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
         }
 
         return false;
+    }
+
+    private function buildProviderLabels(): array
+    {
+        $labels = [];
+        foreach ($this->getProviderList() as $provider) {
+            $labels[$provider] = $this->getProviderCfg($provider)['label'] ?? $provider;
+        }
+        return $labels;
+    }
+
+    private function buildEnvKeys(): array
+    {
+        $keys = [];
+        foreach ($this->getProviderList() as $provider) {
+            $prefix = $this->getProviderCfg($provider)['envPrefix'];
+            $keys[$provider] = [
+                'enabled'       => $prefix . '_ENABLED',
+                'client_id'     => $prefix . '_CLIENT_ID',
+                'client_secret' => $prefix . '_CLIENT_SECRET',
+                'redirect_uri'  => $prefix . '_REDIRECT_URI',
+            ];
+        }
+        return $keys;
+    }
+
+    private function buildCallbackUrls(): array
+    {
+        $urls = [];
+        foreach ($this->getProviderList() as $provider) {
+            $urls[$provider] = $this->buildCallbackUrl($provider);
+        }
+        return $urls;
+    }
+
+    private function buildProviderGuides(): array
+    {
+        $guides = [];
+        foreach ($this->getProviderList() as $provider) {
+            $guide = $this->getProviderCfg($provider)['guide'] ?? null;
+            if ($guide !== null) {
+                $guides[$provider] = $guide;
+            }
+        }
+        return $guides;
     }
 
     public function getSetupUrl(): array

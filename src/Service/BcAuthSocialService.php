@@ -107,7 +107,7 @@ class BcAuthSocialService
             return false;
         }
 
-        $config = Configure::read('BcAuthSocial.providers.' . $provider) ?? [];
+        $config = Configure::read('BcAuthSocial.' . $provider) ?? [];
 
         return !empty($config['enabled']) && !empty($config['clientId']);
     }
@@ -359,6 +359,11 @@ class BcAuthSocialService
     {
         $json = $response->getJson();
         if (!$response->isOk() || !is_array($json)) {
+            $status = $response->getStatusCode();
+            $body = (string)$response->getBody();
+            \Cake\Log\Log::error(
+                sprintf('[BcAuthSocial] %s | HTTP %d | body: %s', $message, $status, mb_substr($body, 0, 1000))
+            );
             throw new RuntimeException($message);
         }
 
@@ -367,7 +372,7 @@ class BcAuthSocialService
 
     private function getProviderConfig(string $provider): array
     {
-        $config = Configure::read('BcAuthSocial.providers.' . $provider) ?? [];
+        $config = Configure::read('BcAuthSocial.' . $provider) ?? [];
         if (empty($config['enabled'])) {
             throw new RuntimeException('このプロバイダは現在無効です。');
         }
@@ -380,7 +385,7 @@ class BcAuthSocialService
 
     private function buildCallbackUrl(string $provider, string $prefix): string
     {
-        $config = Configure::read('BcAuthSocial.providers.' . $provider) ?? [];
+        $config = Configure::read('BcAuthSocial.' . $provider) ?? [];
         if (!empty($config['redirectUri'])) {
             return (string)$config['redirectUri'];
         }
@@ -396,7 +401,7 @@ class BcAuthSocialService
 
     private function canSuggestLinkCandidate(string $provider): bool
     {
-        return (bool)(Configure::read('BcAuthSocial.providers.' . $provider . '.allowLinkCandidate') ?? false);
+        return (bool)(Configure::read('BcAuthSocial.' . $provider . '.allowLinkCandidate') ?? false);
     }
 
     private function hydrateProfile(array $profile): ProviderUserProfile
