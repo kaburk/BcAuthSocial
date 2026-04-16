@@ -14,6 +14,8 @@ use Cake\Http\Client\Response;
 use Cake\Http\Exception\BadRequestException;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
+use Firebase\JWT\JWK;
+use Firebase\JWT\JWT;
 use RuntimeException;
 
 class BcAuthSocialService
@@ -91,7 +93,8 @@ class BcAuthSocialService
         $config = $this->getProviderConfig($provider);
 
         $tokenResponse = $this->requestAccessToken($adapter, $config, $prefix, $code, $stored);
-        $userInfoResponse = $this->requestUserInfo($adapter, $tokenResponse);
+        $idTokenClaims = $this->extractIdTokenClaims($adapter, $config, $tokenResponse, $stored);
+        $userInfoResponse = $this->requestUserInfo($adapter, $tokenResponse, $idTokenClaims);
 
         return $adapter->normalizeUser($tokenResponse, $userInfoResponse);
     }
@@ -331,11 +334,11 @@ class BcAuthSocialService
         return $this->decodeJsonResponse($response, 'アクセストークンの取得に失敗しました。');
     }
 
-    private function requestUserInfo(ProviderAdapterInterface $adapter, array $tokenResponse): array
+    private function requestUserInfo(ProviderAdapterInterface $adapter, array $tokenResponse, array $fallbackClaims = []): array
     {
         $endpoint = $adapter->getUserInfoEndpoint();
         if (!$endpoint) {
-            return [];
+            return $fallbackClaims;
         }
         if (empty($tokenResponse['access_token'])) {
             throw new RuntimeException('アクセストークンがありません。');
@@ -439,5 +442,100 @@ class BcAuthSocialService
     private function generateCodeVerifier(): string
     {
         return rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+    }
+
+    private function extractIdTokenClaims(
+        ProviderAdapterInterface $adapter,
+        array $config,
+        array $tokenResponse,
+        array $stored
+    ): array {
+        if ($adapter->getProvider() !== 'yahoojp') {
+            return [];
+        }
+
+        $idToken = $tokenResponse['id_token'] ?? null;
+        if (!is_string($idToken) || $idToken === '') {
+            throw new RuntimeException('Yahoo! JAPAN の ID Token が返却されませんでした。');
+        }
+
+        $metadata = $this->fetchJsonDocument(
+            'https://auth.login.yahoo.co.jp/yconnect/v2/.well-known/openid-configuration',
+            'Yahoo! JAPAN の OpenID Connect 設定取得に失敗しました。'
+        );
+        $jwksUri = $metadata['jwks_uri'] ?? null;
+        $issuer = $metadata['issuer'] ?? null;
+        if (!is_string($jwksUri) || $jwksUri === '' || !is_string($issuer) || $issuer === '') {
+            throw new RuntimeException('Yahoo! JAPAN の OpenID Connect 設定が不正です。');
+        }
+
+        $jwks = $this->fetchJsonDocument($jwksUri, 'Yahoo! JAPAN の公開鍵取得に失敗しました。');
+
+        try {
+            $keys = JWK::parseKeySet($jwks, 'RS256');
+            $claims = (array)JWT::decode($idToken, $keys);
+        } catch (\Throwable $e) {
+            \Cake\Log\Log::error('[BcAuthSocial] Yahoo! JAPAN ID Token validation failed: ' . $e->getMessage());
+            throw new RuntimeException('Yahoo! JAPAN の ID Token 検証に失敗しました。');
+        }
+
+        $this->assertYahooIdTokenClaims($claims, $issuer, (string)$config['clientId'], $stored, $tokenResponse);
+
+        return $claims;
+    }
+
+    private function fetchJsonDocument(string $url, string $message): array
+    {
+        $response = $this->httpClient->get($url, [], [
+            'headers' => [
+                'Accept' => 'application/json',
+            ],
+        ]);
+
+        return $this->decodeJsonResponse($response, $message);
+    }
+
+    private function assertYahooIdTokenClaims(
+        array $claims,
+        string $issuer,
+        string $clientId,
+        array $stored,
+        array $tokenResponse
+    ): void {
+        if (($claims['iss'] ?? null) !== $issuer) {
+            throw new RuntimeException('Yahoo! JAPAN の ID Token issuer が不正です。');
+        }
+
+        $audience = $claims['aud'] ?? null;
+        $audiences = is_array($audience) ? $audience : [$audience];
+        if (!in_array($clientId, $audiences, true)) {
+            throw new RuntimeException('Yahoo! JAPAN の ID Token audience が一致しません。');
+        }
+
+        $nonce = $claims['nonce'] ?? null;
+        $expectedNonce = $stored['nonce'] ?? null;
+        if (!is_string($nonce) || !is_string($expectedNonce) || !hash_equals($expectedNonce, $nonce)) {
+            throw new RuntimeException('Yahoo! JAPAN の ID Token nonce が一致しません。');
+        }
+
+        $subject = $claims['sub'] ?? null;
+        if (!is_string($subject) || $subject === '') {
+            throw new RuntimeException('Yahoo! JAPAN の ID Token に sub が含まれていません。');
+        }
+
+        if (isset($claims['at_hash']) && !empty($tokenResponse['access_token'])) {
+            $expectedAtHash = $this->generateAtHash((string)$tokenResponse['access_token']);
+            if (!hash_equals((string)$claims['at_hash'], $expectedAtHash)) {
+                throw new RuntimeException('Yahoo! JAPAN の ID Token at_hash が一致しません。');
+            }
+        }
+    }
+
+    private function generateAtHash(string $accessToken): string
+    {
+        $hash = hash('sha256', $accessToken, true);
+        $halfHash = substr($hash, 0, (int)(strlen($hash) / 2));
+
+        return rtrim(strtr(base64_encode($halfHash), '+/', '-_'), '=');
     }
 }

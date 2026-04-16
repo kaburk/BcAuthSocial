@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace BcAuthSocial\Controller;
 
 use BaserCore\Controller\BcFrontAppController;
+use BaserCore\Service\UsersService;
 use BaserCore\Utility\BcUtil;
 use BcAuthCommon\Service\AuthLoginService;
 use BcAuthCommon\Service\AuthLoginLogService;
@@ -210,6 +211,10 @@ class BcAuthController extends BcFrontAppController
         $this->request = $loginResult->request;
         $this->response = $loginResult->response;
 
+        if ($loginResult->status === 'completed') {
+            $this->setLoginSuccessMessage($userId);
+        }
+
         return $this->redirect($loginResult->redirect_url);
     }
 
@@ -233,5 +238,12 @@ class BcAuthController extends BcFrontAppController
         }
 
         return null;
+    }
+
+    private function setLoginSuccessMessage(int $userId): void
+    {
+        /** @var \BaserCore\Model\Entity\User $user */
+        $user = (new UsersService())->get($userId);
+        $this->BcMessage->setInfo(__d('baser_core', 'ようこそ、{0}さん。', $user->getDisplayName()));
     }
 }

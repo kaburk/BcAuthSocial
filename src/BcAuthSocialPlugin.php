@@ -11,6 +11,7 @@ use BcAuthSocial\Adapter\LineProviderAdapter;
 use BcAuthSocial\Adapter\MicrosoftProviderAdapter;
 use BcAuthSocial\Adapter\ProviderAdapterRegistry;
 use BcAuthSocial\Adapter\XProviderAdapter;
+use BcAuthSocial\Adapter\YahooJpProviderAdapter;
 use BcAuthSocial\Event\BcAuthSocialViewEventListener;
 use BcAuthSocial\ServiceProvider\BcAuthSocialServiceProvider;
 use Cake\Core\ContainerInterface;
@@ -42,6 +43,7 @@ class BcAuthSocialPlugin extends BcPlugin
         $registry->register(new GitHubProviderAdapter());
         $registry->register(new LineProviderAdapter());
         $registry->register(new MicrosoftProviderAdapter());
+        $registry->register(new YahooJpProviderAdapter());
 
         AuthEntryService::getInstance()->register([
             'id'       => 'social',

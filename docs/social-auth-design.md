@@ -2,7 +2,174 @@
 
 ## 概要
 
-BcAuthSocial は、baserCMS 5 に OAuth 2.0 / OpenID Connect ベースの外部認証を追加するためのプラグイン構想です。
+BcAuthSocial は、baserCMS 5 に OAuth 2.0 / OpenID Connect ベースの外部認証を追加するためのプラグインです。
+
+初期対象は管理画面（Admin prefix）ログインとし、Front prefix ログインにも展開できる構成を取っています。
+
+パスワード認証やパスキー認証を置き換えるものではなく、ログイン画面に追加の認証入口を提供し、認証成功後は baserCMS の既存ログイン状態に接続する役割を持ちます。
+
+---
+
+## 実装済みスコープ（フェーズ 1）
+
+- ✅ Admin / Front 両 prefix 対応
+- ✅ Google（OIDC）
+- ✅ X（OAuth 2.0 / PKCE）
+- ✅ GitHub（OAuth 2.0）
+- ✅ LINE（OAuth 2.0 / OIDC）
+- ✅ Microsoft（OAuth 2.0 / OIDC / Azure AD `common` エンドポイント）
+- ✅ Yahoo! JAPAN（Authorization Code フロー / ID Token 検証）
+- ✅ 既存 baserCMS ユーザーとのひも付け（`bc_auth_provider_links`）
+- ✅ 連携候補フロー（メール一致 1 件のみ → 確認画面 → 連携確定）
+- ✅ 連携済みアカウント管理画面（解除・追加連携）
+- ✅ provider 設定画面（管理画面から `.env` に書き込み）
+- ✅ AuthEntryService 経由でのログインボタン統合
+
+---
+
+## アーキテクチャ
+
+### Configure 駆動のプロバイダー管理
+
+プロバイダーの設定は `config/setting.php` の `BcAuthSocial` キー配下に一元管理されます。
+配列キー（例: `'google'`）がプロバイダー識別子になります。
+
+```
+BcAuthSocial
+  └── {provider}                 # プロバイダー識別子（例: google）
+        ├── label                # 表示名
+        ├── envPrefix            # .env キーのプレフィックス
+        ├── allowLinkCandidate   # メール一致連携候補の有効化
+        ├── enabled              # env から自動取得
+        ├── clientId             # env から自動取得
+        ├── clientSecret         # env から自動取得
+        ├── redirectUri          # env から自動取得（空なら自動生成）
+        ├── icon                 # ログインボタン用インライン SVG
+        └── guide.steps          # 管理画面設定ガイドの手順配列
+```
+
+`BcAuthSocialConfigsService` は `Configure::read('BcAuthSocial')` を走査し、`label` キーを持つエントリを動的にプロバイダーとして認識します。
+プロバイダーを追加・削除する際、Service / Table / Controller のコードを変更する必要はありません。
+
+### ProviderAdapter パターン
+
+各プロバイダーの OAuth / OIDC 詳細実装は `ProviderAdapterInterface` に抽象化されています。
+
+```
+ProviderAdapterRegistry（シングルトン）
+  └── register(string $provider, ProviderAdapterInterface $adapter)
+  └── get(string $provider): ProviderAdapterInterface
+  └── all(): array
+  └── has(string $provider): bool
+```
+
+Adapter が担う責務:
+
+- 認可 URL・トークン URL・UserInfo URL の提供
+- スコープの定義
+- PKCE / Basic 認証ヘッダー / ID Token 使用有無のフラグ
+- 追加リクエストパラメータの提供
+- `normalizeUser()` によるプロバイダー固有レスポンスの `ProviderUserProfile` への変換
+
+`BcAuthSocialPlugin::bootstrap()` 内で各 Adapter を Registry に登録します。
+
+### 新プロバイダーの追加手順
+
+1. `config/setting.php` にプロバイダーブロックを追加する（`label` / `envPrefix` / `allowLinkCandidate` / `icon` / `guide` を記述）
+2. `src/Adapter/{Name}ProviderAdapter.php` を作成し `ProviderAdapterInterface` を実装する
+3. `src/BcAuthSocialPlugin.php` の `bootstrap()` に `$registry->register('name', new NameProviderAdapter())` を追加する
+4. `.env` にクレデンシャルを設定する（管理画面「ソーシャル認証設定」からも設定可）
+
+管理画面の設定フォーム・ログインボタン・連携アカウント一覧はすべて Configure から自動生成されるため、テンプレートの変更は不要です。
+
+### 外部アドオンプラグインによる拡張
+
+`ProviderAdapterRegistry` はシングルトンとして公開されており、別プラグインから登録できます。
+
+```php
+// 外部アドオンプラグインの bootstrap() 内
+use BcAuthSocial\Adapter\ProviderAdapterRegistry;
+use BcAppleAuth\Adapter\AppleProviderAdapter;
+
+ProviderAdapterRegistry::getInstance()->register('apple', new AppleProviderAdapter());
+```
+
+ただし、管理画面設定フォームへの反映には `config/setting.php` へのブロック追加も必要です。
+
+### 将来のアドオンプラグイン候補
+
+| プラグイン名 | プロバイダー | 備考 |
+|---|---|---|
+| BcAppleAuth | Sign in with Apple | JWT 署名が必要・メール取得は初回のみ |
+| BcFacebookAuth | Facebook / Meta | ビジネス・EC サイト向け |
+| BcDiscordAuth | Discord | コミュニティサイト向け |
+| BcSlackAuth | Slack | 社内向けサイトでの認証基盤として利用可 |
+| BcGitLabAuth | GitLab | 開発者ポータル・社内 GitLab 連携向け |
+
+---
+
+## 認証フロー
+
+### ログインフロー
+
+```
+1. ユーザーがログインページを開く
+2. プロバイダーのログインボタンをクリックする
+3. 認可リクエストを外部プロバイダーへ送る（state / PKCE / nonce をセッションに保存）
+4. ユーザーがプロバイダー上で認証する
+5. callback URL に認可コードと state が返る
+6. state 検証 → トークン交換 → ID Token 検証または UserInfo 取得
+7. normalizeUser() で ProviderUserProfile に変換する
+8. provider_user_id でひも付けを探索する
+   - 見つかれば → ログイン確立
+   - 見つからなければ → 連携候補フローへ
+9. ひも付け済みユーザーがいればログインを確立し、管理画面トップへリダイレクトする
+```
+
+### 連携候補フロー
+
+```
+1. provider_user_id のひも付けなし
+2. email_verified かつ allowLinkCandidate が true の場合、メール一致ユーザーを検索
+3. 一致が 1 件のみ → 連携候補確認画面へ
+4. ユーザーが「連携する」を選択 → ひも付けを保存 → ログイン確立
+5. 「連携しない」を選択 → ログインページへ戻る
+6. 一致なし・複数一致 → ログインページへ（自動連携しない）
+```
+
+---
+
+## ユーザーひも付け方針
+
+- ひも付けの主キーは `provider_user_id`（メールアドレスではない）
+- `bc_auth_provider_links` テーブルで `provider` × `provider_user_id` を一意に管理
+- X のようにメールアドレスが取れないプロバイダーでも成立する設計
+- `email_verified` が false の場合は連携候補提示を行わない
+- `allowLinkCandidate = false` のプロバイダーはメール一致連携候補を無効化する
+
+---
+
+## 各プロバイダーの実装特性
+
+| プロバイダー | 認可方式 | PKCE | Basic 認証 | ID Token | メール取得 |
+|---|---|---|---|---|---|
+| Google | OIDC | 不要 | 不要 | 使用 | 確実（email_verified あり）|
+| X | OAuth 2.0 | 必須 | 必須 | なし | 不安定（scope 次第）|
+| GitHub | OAuth 2.0 | 不要 | 不要 | なし | 別 API 呼び出しが必要 |
+| LINE | OAuth 2.0 / OIDC | 不要 | 不要 | 取得可 | 審査後のみ |
+| Microsoft | OIDC（common） | 不要 | 不要 | 使用 | `mail` or `userPrincipalName` |
+| Yahoo! JAPAN | Authorization Code フロー | 不要 | 必須 | 使用 | ID Token の claim 次第 |
+
+---
+
+## BcAuthPasskey との同時利用
+
+BcAuthSocial は BcAuthPasskey と同時に有効化されることを前提とします。
+
+ログイン画面への認証入口追加は `AuthEntryService`（BcAuthCommon）を経由して行うため、両プラグインの UI が競合しません。
+
+各プラグインは `AuthEntryService::getInstance()->register()` でボタン群を登録し、ログインテンプレートは統一された描画ループで表示します。
+
 
 初期対象は管理画面ログインとし、将来的に Front プレフィックスのログインにも展開できる構成を目指します。
 

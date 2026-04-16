@@ -172,5 +172,26 @@ return [
                 ],
             ],
         ],
+        'yahoojp' => [
+            'label' => 'Yahoo! JAPAN',
+            'envPrefix' => 'BC_SOCIAL_AUTH_YAHOOJP',
+            'allowLinkCandidate' => true,
+            'enabled' => filter_var(env('BC_SOCIAL_AUTH_YAHOOJP_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+            'clientId' => env('BC_SOCIAL_AUTH_YAHOOJP_CLIENT_ID', ''),
+            'clientSecret' => env('BC_SOCIAL_AUTH_YAHOOJP_CLIENT_SECRET', ''),
+            'redirectUri' => env('BC_SOCIAL_AUTH_YAHOOJP_REDIRECT_URI', ''),
+            'guide' => [
+                'steps' => [
+                    '<a href="https://developer.yahoo.co.jp/yconnect/v2/authorization_code/" target="_blank" rel="noopener noreferrer">Yahoo! JAPAN ID連携 v2 の Authorization Code フロー</a> を前提に、Yahoo!デベロッパーネットワークで Client ID を登録します。',
+                    '新しいアプリケーション登録画面では、少なくとも次を選択してください: 「ID連携利用有無」=「ID連携を利用する」、「アプリケーションの種類」=「サーバーサイド（Yahoo! ID連携 v2）」です。',
+                    '「利用者種別」「個人情報授受にかかる確認事項」「住所」「アプリケーション名」「サイトURL」「プライバシーポリシーURL」「利用規約URL」などは、申請者情報と公開サイト情報に合わせて入力してください。',
+                    'Client ID 登録直後の入力画面には Callback URL（リダイレクト URI）欄が見当たらない場合があります。その場合はアプリ作成後の詳細画面・編集画面で ID連携設定を開き、下記の Callback URL を完全一致で設定します。',
+                    'この実装では Authorization エンドポイントで認可コードを取得し、Token エンドポイントへ Basic 認証付きでアクセスして Access Token を取得します。',
+                    'ユーザー識別には、検証済みの ID Token に含まれる `sub` を使用します。UserInfo API（属性取得API）は利用しません。',
+                    'email や profile の claim が ID Token に含まれない場合でも、ログイン自体は可能です。その場合はメール一致による連携候補表示は行われません。',
+                    'アプリケーション管理画面から Client ID と Client Secret を取得し、この画面に入力します。',
+                ],
+            ],
+        ],
     ],
 ];
