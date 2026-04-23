@@ -19,6 +19,18 @@ $adapters = $registry->all();
 $service = new BcAuthSocialService();
 $redirect = $this->request->getQuery('redirect');
 
+uasort($adapters, function ($leftAdapter, $rightAdapter) use ($registry) {
+    $leftProvider = $leftAdapter->getProvider();
+    $rightProvider = $rightAdapter->getProvider();
+    $leftOrder = (int)(Configure::read('BcAuthSocial.' . $leftProvider . '.order') ?? 9999);
+    $rightOrder = (int)(Configure::read('BcAuthSocial.' . $rightProvider . '.order') ?? 9999);
+    if ($leftOrder === $rightOrder) {
+        return strcmp($leftProvider, $rightProvider);
+    }
+
+    return $leftOrder <=> $rightOrder;
+});
+
 if (empty($adapters)) {
     return;
 }

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Cake\Utility\Hash;
+
 /**
  * BcAuthSocial 設定ファイル
  *
@@ -35,6 +37,7 @@ declare(strict_types=1);
  * allowLinkCandidate (bool)  true にすると、同じメールアドレスの既存ユーザーへの
  *                            自動連携候補提示を有効にする。
  *                            メールアドレスが確実に検証済みと言えないプロバイダーは false にする。
+ * order            (int)     ログイン画面・設定画面での表示順。小さい値ほど先に表示。
  * enabled          (bool)    .env の {envPrefix}_ENABLED から自動取得。手動変更不要。
  * clientId         (string)  .env の {envPrefix}_CLIENT_ID から自動取得。手動変更不要。
  * clientSecret     (string)  .env の {envPrefix}_CLIENT_SECRET から自動取得。手動変更不要。
@@ -48,7 +51,7 @@ declare(strict_types=1);
  * ────────────────────────────────────────────────────────────────────────────
  */
 
-return [
+$config = [
     'BcApp' => [
         'adminNavigation' => [
             'Plugins' => [
@@ -76,10 +79,22 @@ return [
         ],
     ],
     'BcAuthSocial' => [
+        // 各プロバイダー共通キー:
+        // - label: 管理画面・ログインボタンに表示する名称
+        // - envPrefix: .env のキー接頭辞（{PREFIX}_ENABLED など）
+        // - allowLinkCandidate: メール一致時に既存ユーザーへの連携候補を出すかどうか
+        // - order: 表示順。小さい値ほど先に表示
+        // - enabled / clientId / clientSecret / redirectUri: .env から自動取得
+        // - icon: ログインボタンに表示するアイコン SVG
+        // - guide.steps: 管理画面の設定ガイドに出す手順
+
+        // Google OAuth / OpenID Connect 設定
+        // メールアドレスの信頼性が高いため、既存ユーザーへの連携候補を有効にしています。
         'google' => [
             'label' => 'Google',
             'envPrefix' => 'BC_SOCIAL_AUTH_GOOGLE',
             'allowLinkCandidate' => true,
+            'order' => 10,
             'enabled' => filter_var(env('BC_SOCIAL_AUTH_GOOGLE_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
             'clientId' => env('BC_SOCIAL_AUTH_GOOGLE_CLIENT_ID', ''),
             'clientSecret' => env('BC_SOCIAL_AUTH_GOOGLE_CLIENT_SECRET', ''),
@@ -96,10 +111,14 @@ return [
                 ],
             ],
         ],
+
+        // X OAuth 2.0 設定
+        // X はメールアドレスを安定して取得できないため、メール一致による連携候補は無効にしています。
         'x' => [
             'label' => 'X',
             'envPrefix' => 'BC_SOCIAL_AUTH_X',
             'allowLinkCandidate' => false,
+            'order' => 20,
             'enabled' => filter_var(env('BC_SOCIAL_AUTH_X_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
             'clientId' => env('BC_SOCIAL_AUTH_X_CLIENT_ID', ''),
             'clientSecret' => env('BC_SOCIAL_AUTH_X_CLIENT_SECRET', ''),
@@ -115,10 +134,14 @@ return [
                 ],
             ],
         ],
+
+        // GitHub OAuth 2.0 設定
+        // メールアドレスは別 API を通じて取得する前提ですが、取得できた場合は連携候補を出します。
         'github' => [
             'label' => 'GitHub',
             'envPrefix' => 'BC_SOCIAL_AUTH_GITHUB',
             'allowLinkCandidate' => true,
+            'order' => 30,
             'enabled' => filter_var(env('BC_SOCIAL_AUTH_GITHUB_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
             'clientId' => env('BC_SOCIAL_AUTH_GITHUB_CLIENT_ID', ''),
             'clientSecret' => env('BC_SOCIAL_AUTH_GITHUB_CLIENT_SECRET', ''),
@@ -134,10 +157,14 @@ return [
                 ],
             ],
         ],
+
+        // LINE Login 設定
+        // メールアドレス取得は LINE 側審査が必要ですが、取得できた場合は連携候補を出します。
         'line' => [
             'label' => 'LINE',
             'envPrefix' => 'BC_SOCIAL_AUTH_LINE',
             'allowLinkCandidate' => true,
+            'order' => 40,
             'enabled' => filter_var(env('BC_SOCIAL_AUTH_LINE_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
             'clientId' => env('BC_SOCIAL_AUTH_LINE_CLIENT_ID', ''),
             'clientSecret' => env('BC_SOCIAL_AUTH_LINE_CLIENT_SECRET', ''),
@@ -153,29 +180,14 @@ return [
                 ],
             ],
         ],
-        'microsoft' => [
-            'label' => 'Microsoft',
-            'envPrefix' => 'BC_SOCIAL_AUTH_MICROSOFT',
-            'allowLinkCandidate' => true,
-            'enabled' => filter_var(env('BC_SOCIAL_AUTH_MICROSOFT_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
-            'clientId' => env('BC_SOCIAL_AUTH_MICROSOFT_CLIENT_ID', ''),
-            'clientSecret' => env('BC_SOCIAL_AUTH_MICROSOFT_CLIENT_SECRET', ''),
-            'redirectUri' => env('BC_SOCIAL_AUTH_MICROSOFT_REDIRECT_URI', ''),
-            'icon' => '<svg viewBox="0 0 24 24" role="img" aria-hidden="true"><path fill="#F25022" d="M2 2h9.5v9.5H2z"/><path fill="#7FBA00" d="M12.5 2H22v9.5h-9.5z"/><path fill="#00A4EF" d="M2 12.5h9.5V22H2z"/><path fill="#FFB900" d="M12.5 12.5H22V22h-9.5z"/></svg>',
-            'guide' => [
-                'steps' => [
-                    '<a href="https://entra.microsoft.com/" target="_blank" rel="noopener noreferrer">Microsoft Entra 管理センター</a>（または <a href="https://portal.azure.com/" target="_blank" rel="noopener noreferrer">Azure Portal</a>）にアクセスします。',
-                    '「アプリの登録」→「新規登録」を選択し、アプリ名を入力します。サポートされているアカウントの種類は「任意の組織ディレクトリ内のアカウントと個人の Microsoft アカウント」を選択します。',
-                    '「リダイレクト URI」のプラットフォームに「Web」を選択し、下記の Callback URL を入力して「登録」をクリックします。',
-                    '「証明書とシークレット」→「新しいクライアントシークレット」を追加し、表示されたシークレット値をコピーします（画面遷移後は再表示されません）。',
-                    '「概要」ページの「アプリケーション（クライアント）ID」をコピーし、Client ID に入力します。',
-                ],
-            ],
-        ],
+
+        // Yahoo! JAPAN ID 連携 v2 設定
+        // UserInfo API ではなく、ID Token を検証して sub を取得する構成です。
         'yahoojp' => [
             'label' => 'Yahoo! JAPAN',
             'envPrefix' => 'BC_SOCIAL_AUTH_YAHOOJP',
             'allowLinkCandidate' => true,
+            'order' => 50,
             'enabled' => filter_var(env('BC_SOCIAL_AUTH_YAHOOJP_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
             'clientId' => env('BC_SOCIAL_AUTH_YAHOOJP_CLIENT_ID', ''),
             'clientSecret' => env('BC_SOCIAL_AUTH_YAHOOJP_CLIENT_SECRET', ''),
@@ -193,5 +205,35 @@ return [
                 ],
             ],
         ],
+
+        // Microsoft アカウント / Entra ID 設定
+        // 個人アカウント・組織アカウントの両方を対象にした common エンドポイント前提です。
+        'microsoft' => [
+            'label' => 'Microsoft',
+            'envPrefix' => 'BC_SOCIAL_AUTH_MICROSOFT',
+            'allowLinkCandidate' => true,
+            'order' => 60,
+            'enabled' => filter_var(env('BC_SOCIAL_AUTH_MICROSOFT_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+            'clientId' => env('BC_SOCIAL_AUTH_MICROSOFT_CLIENT_ID', ''),
+            'clientSecret' => env('BC_SOCIAL_AUTH_MICROSOFT_CLIENT_SECRET', ''),
+            'redirectUri' => env('BC_SOCIAL_AUTH_MICROSOFT_REDIRECT_URI', ''),
+            'icon' => '<svg viewBox="0 0 24 24" role="img" aria-hidden="true"><path fill="#F25022" d="M2 2h9.5v9.5H2z"/><path fill="#7FBA00" d="M12.5 2H22v9.5h-9.5z"/><path fill="#00A4EF" d="M2 12.5h9.5V22H2z"/><path fill="#FFB900" d="M12.5 12.5H22V22h-9.5z"/></svg>',
+            'guide' => [
+                'steps' => [
+                    '<a href="https://entra.microsoft.com/" target="_blank" rel="noopener noreferrer">Microsoft Entra 管理センター</a>（または <a href="https://portal.azure.com/" target="_blank" rel="noopener noreferrer">Azure Portal</a>）にアクセスします。',
+                    '「アプリの登録」→「新規登録」を選択し、アプリ名を入力します。サポートされているアカウントの種類は「任意の組織ディレクトリ内のアカウントと個人の Microsoft アカウント」を選択します。',
+                    '「リダイレクト URI」のプラットフォームに「Web」を選択し、下記の Callback URL を入力して「登録」をクリックします。',
+                    '「証明書とシークレット」→「新しいクライアントシークレット」を追加し、表示されたシークレット値をコピーします（画面遷移後は再表示されません）。',
+                    '「概要」ページの「アプリケーション（クライアント）ID」をコピーし、Client ID に入力します。',
+                ],
+            ],
+        ],
     ],
 ];
+
+if (file_exists(__DIR__ . DS . 'setting_customize.php')) {
+    include __DIR__ . DS . 'setting_customize.php';
+    $config = Hash::merge($config, $customize_config);
+}
+
+return $config;

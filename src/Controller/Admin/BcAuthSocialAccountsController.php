@@ -23,11 +23,19 @@ class BcAuthSocialAccountsController extends BcAdminAppController
         $service = new BcAuthSocialService();
         $links = $service->getUserLinks((int) $loginUser->id, 'Admin');
         $registry = Configure::read('BcAuthSocial') ?? [];
-        $providerLabels = [];
+        $providers = [];
         foreach ($registry as $provider => $cfg) {
             if (is_array($cfg) && isset($cfg['label'])) {
-                $providerLabels[$provider] = $cfg['label'];
+                $providers[$provider] = [
+                    'label' => $cfg['label'],
+                    'order' => (int)($cfg['order'] ?? 9999),
+                ];
             }
+        }
+        uasort($providers, fn(array $a, array $b) => $a['order'] <=> $b['order']);
+        $providerLabels = [];
+        foreach ($providers as $provider => $providerConfig) {
+            $providerLabels[$provider] = $providerConfig['label'];
         }
         $availableProviders = [];
         foreach ($providerLabels as $provider => $label) {

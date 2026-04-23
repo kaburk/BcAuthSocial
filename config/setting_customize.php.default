@@ -1,0 +1,69 @@
+<?php
+/**
+ * BcAuthSocial カスタマイズ設定
+ *
+ * このファイルを setting_customize.php にリネームして使用してください。
+ * setting.php の値をここで上書きできます。
+ * setting_customize.php は .gitignore に含まれているため、
+ * リポジトリにコミットされません。
+ */
+
+// ============================================================================
+// ここだけ編集すれば基本的なカスタマイズができます
+// ----------------------------------------------------------------------------
+// 各プロバイダーで主に触る項目は次の 5 つです。
+// - enabled: そのプロバイダーを有効にするか
+// - order: ログイン画面・設定画面の表示順
+// - clientId: OAuth / OIDC の Client ID
+// - clientSecret: OAuth / OIDC の Client Secret
+// - redirectUri: コールバック URL（未設定なら自動生成）
+//
+// 使わない項目はコメントのまま残してください。
+// ============================================================================
+
+$customize_config = [
+    'BcAuthSocial' => [
+        // Google OAuth / OIDC 設定例
+        'google' => [
+            'order' => 10,
+        ],
+
+        // X OAuth 2.0 設定例
+        'x' => [
+            'order' => 20,
+        ],
+
+        // GitHub OAuth 設定例
+        'github' => [
+            'order' => 30,
+        ],
+
+        // LINE Login 設定例
+        'line' => [
+            'order' => 40,
+        ],
+
+        // Yahoo! JAPAN ID 連携 v2 設定例
+        'yahoojp' => [
+            'order' => 50,
+        ],
+
+        // Microsoft / Entra ID 設定例
+        'microsoft' => [
+            'order' => 60,
+        ],
+    ],
+
+    // 管理メニューを上書きしたい場合の例
+    // 'BcApp' => [
+    //     'adminNavigation' => [
+    //         'Plugins' => [
+    //             'menus' => [
+    //                 'BcAuthSocialConfigs' => [
+    //                     'title' => __d('baser_core', 'SNSログイン設定'),
+    //                 ],
+    //             ],
+    //         ],
+    //     ],
+    // ],
+];

@@ -31,7 +31,16 @@ class BcAuthSocialConfigsService implements BcAuthSocialConfigsServiceInterface
     private function getProviderList(): array
     {
         $registry = Configure::read('BcAuthSocial') ?? [];
-        return array_keys(array_filter($registry, fn($v) => is_array($v) && isset($v['label'])));
+        $providers = [];
+        foreach ($registry as $provider => $cfg) {
+            if (!is_array($cfg) || !isset($cfg['label'])) {
+                continue;
+            }
+            $providers[$provider] = (int)($cfg['order'] ?? 9999);
+        }
+        asort($providers, SORT_NUMERIC);
+
+        return array_keys($providers);
     }
 
     /**

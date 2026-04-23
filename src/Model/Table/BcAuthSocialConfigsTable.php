@@ -32,9 +32,16 @@ class BcAuthSocialConfigsTable extends Table
     {
         if ($this->_schema === null) {
             $registry = Configure::read('BcAuthSocial') ?? [];
-            $providers = array_keys(array_filter($registry, fn($v) => is_array($v) && isset($v['label'])));
+            $providers = [];
+            foreach ($registry as $provider => $cfg) {
+                if (!is_array($cfg) || !isset($cfg['label'])) {
+                    continue;
+                }
+                $providers[$provider] = (int)($cfg['order'] ?? 9999);
+            }
+            asort($providers, SORT_NUMERIC);
             $schema = new TableSchema('social_auth_configs');
-            foreach ($providers as $provider) {
+            foreach (array_keys($providers) as $provider) {
                 $schema->addColumn($provider . '_enabled', ['type' => 'boolean', 'null' => true, 'default' => false]);
                 $schema->addColumn($provider . '_client_id', ['type' => 'string', 'null' => true, 'default' => '']);
                 $schema->addColumn($provider . '_client_secret', ['type' => 'string', 'null' => true, 'default' => '']);
