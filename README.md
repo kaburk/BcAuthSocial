@@ -15,12 +15,12 @@ BcAuthSocial は、baserCMS 5 に Google や X などの外部認証を追加す
 
 | プロバイダー | 認証方式 | 備考 |
 |---|---|---|
-| Google | OIDC | email_verified 保証あり |
-| X | OAuth 2.0 / PKCE | メールアドレス不安定・allowLinkCandidate=false |
-| GitHub | OAuth 2.0 | メールは別 API から取得 |
-| LINE | OAuth 2.0 / OIDC | メール取得は LINE 側の審査が必要 |
-| Yahoo! JAPAN | Authorization Code フロー | 検証済み ID Token から `sub` を取得。email / profile は claim がある場合のみ利用 |
-| Microsoft | OIDC（common エンドポイント） | 個人・組織アカウント両対応 |
+| Google | OIDC |  |
+| X | OAuth 2.0 / PKCE |  |
+| GitHub | OAuth 2.0 |  |
+| LINE | OAuth 2.0 / OIDC |  |
+| Yahoo! JAPAN | Authorization Code フロー |  |
+| Microsoft | OIDC（common エンドポイント） |  |
 
 ## プロバイダーの追加方法
 
@@ -33,6 +33,7 @@ BcAuthSocial は、baserCMS 5 に Google や X などの外部認証を追加す
 4. **`.env`** にクレデンシャルを設定する（管理画面「ソーシャル認証設定」からも設定可）
 
 管理画面の設定フォーム・ログインボタン・連携アカウント一覧はすべて Configure から自動生成されるため、テンプレートの変更は不要です。
+
 
 ## 外部アドオンプラグインによる拡張
 
