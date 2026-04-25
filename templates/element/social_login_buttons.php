@@ -19,6 +19,8 @@ $adapters = $registry->all();
 $service = new BcAuthSocialService();
 $redirect = $this->request->getQuery('redirect');
 
+$this->BcBaser->js('BcAuthSocial.bc_auth_social', false, ['defer' => true]);
+
 uasort($adapters, function ($leftAdapter, $rightAdapter) use ($registry) {
     $leftProvider = $leftAdapter->getProvider();
     $rightProvider = $rightAdapter->getProvider();
@@ -53,7 +55,7 @@ $isAdmin = ($prefix ?? 'Admin') === 'Admin';
     ?>
         <?php if ($isAdmin): ?>
         <div class="submit bca-login-form-btn-group bca-login-form-btn-group--alt">
-            <a href="<?= h($loginUrl) ?>" class="bca-btn bca-login-alt-methods__btn bca-login-alt-methods__btn--<?= h($provider) ?>" data-bca-btn-type="login">
+            <a href="<?= h($loginUrl) ?>" class="bca-btn bca-login-alt-methods__btn bca-login-alt-methods__btn--<?= h($provider) ?>" data-bca-btn-type="login" data-bc-social-login-button="true">
                 <span class="bca-login-alt-methods__icon" aria-hidden="true"><?= Configure::read('BcAuthSocial.' . $provider . '.icon') ?? h(strtoupper(substr((string) $provider, 0, 1))) ?></span>
                 <span class="bca-login-alt-methods__body">
                     <span class="bca-login-alt-methods__title"><?= h($adapter->getLabel()) ?></span>
@@ -62,7 +64,7 @@ $isAdmin = ($prefix ?? 'Admin') === 'Admin';
             </a>
         </div>
         <?php else: ?>
-        <a href="<?= h($loginUrl) ?>" class="btn btn-social btn-<?= h($provider) ?>">
+        <a href="<?= h($loginUrl) ?>" class="btn btn-social btn-<?= h($provider) ?>" data-bc-social-login-button="true">
                 <?= h($adapter->getLabel()) ?>
         </a>
         <?php endif; ?>

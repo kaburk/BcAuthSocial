@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace BcAuthSocial\Service;
 
+use BcAuthCommon\Service\AuthLoginLogService;
 use BcAuthSocial\Adapter\ProviderAdapterInterface;
 use BcAuthSocial\Adapter\ProviderAdapterRegistry;
 use BcAuthSocial\Adapter\ProviderUserProfile;
@@ -45,6 +46,7 @@ class BcAuthSocialService
             'redirect' => $redirect,
             'state' => $state,
             'nonce' => $nonce,
+            'client_ip' => AuthLoginLogService::getRequestIp(Router::getRequest()),
             'requested_at' => time(),
         ];
 
@@ -104,6 +106,12 @@ class BcAuthSocialService
         return Router::getRequest()->getSession()->read($this->getAuthSessionKey($provider, $prefix) . '.redirect');
     }
 
+    public function getStoredClientIp(string $provider, string $prefix): ?string
+    {
+        $ipAddress = (string) Router::getRequest()->getSession()->read($this->getAuthSessionKey($provider, $prefix) . '.client_ip');
+        return filter_var($ipAddress, FILTER_VALIDATE_IP) ? $ipAddress : null;
+    }
+
     public function isProviderAvailable(string $provider): bool
     {
         if (!ProviderAdapterRegistry::getInstance()->has($provider)) {
@@ -145,12 +153,20 @@ class BcAuthSocialService
         return $query->first();
     }
 
-    public function storePendingLinkCandidate(string $provider, string $prefix, ProviderUserProfile $profile, int $userId, ?string $redirect = null): void
+    public function storePendingLinkCandidate(
+        string $provider,
+        string $prefix,
+        ProviderUserProfile $profile,
+        int $userId,
+        ?string $redirect = null,
+        ?string $clientIp = null
+    ): void
     {
         Router::getRequest()->getSession()->write($this->getPendingLinkSessionKey($provider, $prefix), [
             'provider' => $provider,
             'prefix' => $prefix,
             'redirect' => $redirect,
+            'client_ip' => $clientIp,
             'user_id' => $userId,
             'profile' => [
                 'providerUserId' => $profile->providerUserId,
@@ -177,6 +193,7 @@ class BcAuthSocialService
             'provider' => $provider,
             'prefix' => $prefix,
             'redirect' => $stored['redirect'] ?? null,
+            'client_ip' => (string) ($stored['client_ip'] ?? ''),
             'candidateUser' => $candidateUser,
             'profile' => $this->hydrateProfile($stored['profile']),
         ];
@@ -204,6 +221,7 @@ class BcAuthSocialService
         return [
             'user_id' => (int)$stored['candidateUser']->id,
             'redirect' => $stored['redirect'],
+            'client_ip' => (string) ($stored['client_ip'] ?? ''),
             'profile' => $stored['profile'],
         ];
     }
@@ -291,7 +309,7 @@ class BcAuthSocialService
         $request = Router::getRequest();
         $link = $this->links->patchEntity($link, [
             'last_login' => date('Y-m-d H:i:s'),
-            'last_login_ip' => $request?->clientIp(),
+            'last_login_ip' => AuthLoginLogService::getRequestIp($request),
             'last_login_user_agent' => $request?->getHeaderLine('User-Agent'),
         ]);
         $this->links->save($link);

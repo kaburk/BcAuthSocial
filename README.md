@@ -76,6 +76,25 @@ ProviderAdapterRegistry::getInstance()->register('apple', new AppleProviderAdapt
 
 `*_REDIRECT_URI` を未設定の場合は `/baser/admin/bc-auth-social/bc_auth/callback/{provider}` が自動生成されます。
 
+## 公開プラグインとして配布する場合の注意
+
+BcAuthSocial は、配布元が固定の OAuth クライアント情報を提供する設計ではありません。
+公開プラグインとして運用する場合は、**利用者ごとに各自の OAuth アプリを作成し、Client ID / Client Secret を設定してもらう** 前提で案内してください。
+
+- Client ID / Client Secret をプラグインに同梱しない
+- `.env` または管理画面「ソーシャル認証設定」で利用者が設定する
+- 開発環境・本番環境で OAuth クライアントを分ける
+
+### Google で「組織内でのみ利用可能」と表示される場合
+
+Google Cloud 側の OAuth 同意画面が `Internal` のときに発生します。
+
+- その Google Workspace 組織アカウント以外はログインできません
+- 不特定ユーザー向けに公開する場合は `External` を選択してください
+- 公開前の検証中はテストユーザー登録が必要です
+
+このエラーは BcAuthSocial の実装不具合ではなく、Google OAuth アプリ設定による制約です。
+
 ### Yahoo! JAPAN 登録時の補足
 
 Yahoo! JAPAN の Client ID 登録画面では、少なくとも次を選択してください。

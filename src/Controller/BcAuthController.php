@@ -79,18 +79,39 @@ class BcAuthController extends BcFrontAppController
 
         if ($error || !$code) {
             $this->BcMessage->setError(__d('baser_core', 'ログインがキャンセルされました。'));
-            AuthLoginLogService::write('link_cancel', prefix: 'Front', authSource: 'social:' . $provider, request: $this->request, detail: 'error=' . ($error ?? 'no_code'));
+            AuthLoginLogService::writeWithContext(
+                event: 'link_cancel',
+                prefix: 'Front',
+                authSource: 'social:' . $provider,
+                request: $this->request,
+                context: [
+                    'request_path' => (string) $this->request->getRequestTarget(),
+                    'referer' => (string) $this->request->getHeaderLine('Referer'),
+                    'payload' => ['error' => (string) ($error ?? 'no_code')],
+                ]
+            );
             return $this->redirect($this->getLoginUrl());
         }
 
         $service = new BcAuthSocialService();
         $redirect = $service->getStoredRedirect($provider, 'Front');
+        $clientIp = $service->getStoredClientIp($provider, 'Front');
 
         try {
             $profile = $service->handleCallback($provider, 'Front', $code, $state);
         } catch (\RuntimeException $e) {
             $this->BcMessage->setError($e->getMessage());
-            AuthLoginLogService::write('login_failure', prefix: 'Front', authSource: 'social:' . $provider, request: $this->request, detail: $e->getMessage());
+            AuthLoginLogService::writeWithContext(
+                event: 'login_failure',
+                prefix: 'Front',
+                authSource: 'social:' . $provider,
+                request: $this->request,
+                context: [
+                    'request_path' => (string) $this->request->getRequestTarget(),
+                    'referer' => (string) $this->request->getHeaderLine('Referer'),
+                    'payload' => ['error' => $e->getMessage()],
+                ]
+            );
             return $this->redirect($this->getLoginUrl());
         }
 
@@ -125,12 +146,12 @@ class BcAuthController extends BcFrontAppController
 
         if ($userId > 0) {
             $service->updateLastLogin($profile);
-            return $this->completeLogin($userId, $provider, $redirect);
+            return $this->completeLogin($userId, $provider, $redirect, $clientIp);
         }
 
         $candidateUser = $service->resolveLinkCandidate($profile);
         if ($candidateUser) {
-            $service->storePendingLinkCandidate($provider, 'Front', $profile, (int) $candidateUser->id, $redirect);
+            $service->storePendingLinkCandidate($provider, 'Front', $profile, (int) $candidateUser->id, $redirect, $clientIp);
             return $this->redirect([
                 'prefix' => false,
                 'plugin' => 'BcAuthSocial',
@@ -143,7 +164,17 @@ class BcAuthController extends BcFrontAppController
         $this->BcMessage->setError(
             __d('baser_core', 'このアカウントは連携されていません。管理者に連絡してください。')
         );
-        AuthLoginLogService::write('login_failure', prefix: 'Front', authSource: 'social:' . $provider, request: $this->request, detail: 'no linked user');
+        AuthLoginLogService::writeWithContext(
+            event: 'login_failure',
+            prefix: 'Front',
+            authSource: 'social:' . $provider,
+            request: $this->request,
+            context: [
+                'request_path' => (string) $this->request->getRequestTarget(),
+                'referer' => (string) $this->request->getHeaderLine('Referer'),
+                'payload' => ['error' => 'no linked user'],
+            ]
+        );
         return $this->redirect($this->getLoginUrl());
     }
 
@@ -176,7 +207,7 @@ class BcAuthController extends BcFrontAppController
             return $this->redirect($this->getLoginUrl());
         }
 
-        return $this->completeLogin((int) $result['user_id'], $provider, $result['redirect'] ?? null);
+        return $this->completeLogin((int) $result['user_id'], $provider, $result['redirect'] ?? null, (string) ($result['client_ip'] ?? ''));
     }
 
     public function cancelLink(string $provider): Response
@@ -186,12 +217,21 @@ class BcAuthController extends BcFrontAppController
         $service = new BcAuthSocialService();
         $service->clearPendingLinkCandidate($provider, 'Front');
         $this->BcMessage->setInfo(__d('baser_core', '外部アカウント連携をキャンセルしました。'));
-        AuthLoginLogService::write('link_cancel', prefix: 'Front', authSource: 'social:' . $provider, request: $this->request);
+        AuthLoginLogService::writeWithContext(
+            event: 'link_cancel',
+            prefix: 'Front',
+            authSource: 'social:' . $provider,
+            request: $this->request,
+            context: [
+                'request_path' => (string) $this->request->getRequestTarget(),
+                'referer' => (string) $this->request->getHeaderLine('Referer'),
+            ]
+        );
 
         return $this->redirect($this->getLoginUrl());
     }
 
-    private function completeLogin(int $userId, string $provider, ?string $redirect): Response
+    private function completeLogin(int $userId, string $provider, ?string $redirect, ?string $clientIp = null): Response
     {
         $loginService = new AuthLoginService();
 
@@ -201,9 +241,22 @@ class BcAuthController extends BcFrontAppController
                 'prefix' => 'Front',
                 'auth_source' => 'social:' . $provider,
                 'redirect' => $redirect,
+                'client_ip' => $clientIp,
                 'saved' => false,
             ], $this->request, $this->response);
         } catch (\RuntimeException $e) {
+            AuthLoginLogService::writeWithContext(
+                event: 'login_failure',
+                userId: $userId,
+                prefix: 'Front',
+                authSource: 'social:' . $provider,
+                request: $this->request,
+                context: [
+                    'request_path' => (string) $this->request->getRequestTarget(),
+                    'referer' => (string) $this->request->getHeaderLine('Referer'),
+                    'payload' => ['error' => $e->getMessage()],
+                ]
+            );
             $this->BcMessage->setError(__d('baser_core', 'ログイン状態の確立に失敗しました。'));
             return $this->redirect($this->getLoginUrl());
         }

@@ -103,6 +103,8 @@ $config = [
             'guide' => [
                 'steps' => [
                     '<a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">Google Cloud Console</a> にアクセスし、プロジェクトを作成（または選択）します。',
+                    '左メニューの「APIとサービス」→「OAuth 同意画面」を開き、公開用途の場合は User Type を「External」に設定します。',
+                    '公開前の検証段階では、必要な Google アカウントを「テストユーザー」に追加します。',
                     '左メニューの「APIとサービス」→「認証情報」を開きます。',
                     '「認証情報を作成」→「OAuth クライアント ID」を選択します。',
                     'アプリケーションの種類で「ウェブ アプリケーション」を選択します。',
