@@ -95,6 +95,8 @@ ProviderAdapterRegistry::getInstance()->register('apple', new AppleProviderAdapt
 
 - [../BcAuthCommon/README.md](../BcAuthCommon/README.md)
 - [../BcAuthPasskey/README.md](../BcAuthPasskey/README.md)
+- [../BcAuthSocial/README.md](../BcAuthSocial/README.md)
+- [../BcAuthGuard/README.md](../BcAuthGuard/README.md)
 
 ## ライセンス
 
